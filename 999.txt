@@ -1,0 +1,808 @@
+
+k
+跟我一个最终版本，从上游，到使用，自己模拟，演练必须开箱即用缺什么信息，与口径。我一个给你，不需要我修改任何东西
+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
+
+下面是一份**“一次到位、可机检、零歧义”的PC28系统《验收清单》**。
+它把每一步都“卡死”到具体命令、期望输出、合格阈值与不合格分支，工程侧照抄执行即可逐项勾选。
+
+适用对象：你当前已按我提供的 PC28_INSTALLER.sh 安装过，并在仓库根目录执行。
+目录假设：${PWD} 为根目录；重要产物路径与文件名如下清单中统一。
+所需工具：bash、jq、awk、sed、date、bq（Cloud SDK）、可选 gcloud/gsutil（启用Vertex时）。
+
+⸻
+
+A. 环境与前置（硬性）
+
+A1. 依赖可用
+
+for b in bash jq awk sed date bq; do command -v $b >/dev/null || echo "MISS:$b"; done
+
+	•	期望：无 MISS:* 输出（全都安装）。
+	•	不通过处理：安装缺失组件（Google Cloud SDK / jq等），重试A1。
+
+A2. 核心环境变量就位
+
+echo "PROJECT=${PROJECT:-}" "DS_DRAW=${DS_DRAW:-}" "DS_LAB=${DS_LAB:-}" "BQLOC=${BQLOC:-}" "TZ=${TZ:-}"
+
+	•	期望：
+	•	PROJECT=wprojectl
+	•	DS_DRAW=pc28
+	•	DS_LAB=pc28_lab
+	•	BQLOC=us-central1
+	•	TZ=Asia/Shanghai
+	•	不通过处理：在当前终端 export 正确的值，或写入shell配置文件后重开终端。
+
+A3. GCP鉴权有效
+
+bq ls ${PROJECT}:${DS_DRAW} >/dev/null
+
+	•	期望：退出码0。
+	•	不通过处理：gcloud auth login / gcloud config set project ${PROJECT}。
+
+⸻
+
+B. 安装器与主脚本存在性（硬性）
+
+B1. 安装器可执行
+
+test -x PC28_INSTALLER.sh && echo OK || echo MISS
+
+	•	期望：OK
+
+B2. 运行安装过程
+
+bash PC28_INSTALLER.sh install
+
+	•	期望：末尾打印：
+	•	安装完成：PC28_COMPLETE_SOLUTION.sh 已生成。
+	•	manifest: deliverables/manifest.json
+	•	✅ 自检：true（可选）
+
+B3. 主脚本可执行
+
+test -x PC28_COMPLETE_SOLUTION.sh && echo OK || echo MISS
+
+	•	期望：OK
+
+⸻
+
+C. 目录结构与关键文件（硬性）
+
+C1. 目录存在
+
+for d in runs/metrics runs/signals runs/portfolio docs deliverables sql CHANGESETS/receipts/CompleteSolution CHANGESETS/backups/CompleteSolution ~/.pc28_state TEMP_CODE/state; do test -d "$d" || echo "MISS:$d"; done
+
+	•	期望：无 MISS:*
+
+C2. 文档四件套存在
+
+ls -1 docs/README_FULL.md docs/API_PROTOCOL.md docs/OPERATIONS.md docs/TROUBLESHOOTING.md
+
+	•	期望：4个文件列出且存在。
+
+C3. 最小产物存在
+
+ls -1 deliverables/kpi_60m.csv deliverables/layers_count.csv deliverables/health.json runs/metrics/heartbeat.txt
+
+	•	期望：4个文件列出且存在。
+
+⸻
+
+D. 11个验证码（硬性，机检项）
+
+D1. 一次性核验
+
+VC_FILE=PC28_COMPLETE_SOLUTION.sh
+for vc in \
+"PC28|ALL-IN-ONE|C1d5" "PC28|VERTEX|RstA" "PC28|VIEWFIX|Vf7x" \
+"PC28|ADAPTIVE|Ga2q"   "PC28|PI|Pi9k"     "PC28|SWITCH|Sw3h" \
+"PC28|TG|Tg4m"         "PC28|MON|Mn6b"    "PC28|EMG|Em2r" \
+"PC28|BRIDGE|Bd8y"     "PC28|VERIFY|Vy1t"; do
+  grep -q "$vc" "$VC_FILE" || echo "MISS-VC:$vc"
+done
+
+	•	期望：无 MISS-VC:* 输出。
+	•	若有缺失：请回滚/重装（见K节）。
+
+⸻
+
+E. manifest.json（硬性，机检项）
+
+E1. 基本机检
+
+test -s deliverables/manifest.json && jq -e '.files|length>5 and .vc_passed==true' deliverables/manifest.json >/dev/null && echo OK || echo FAIL
+
+	•	期望：OK
+	•	不通过处理：重新执行 bash PC28_INSTALLER.sh verify；仍失败则看 deliverables/manifest.json 内容，排查 vc_passed=false 原因（多为VC缺失或主脚本未写出）。
+
+E2. manifest字段完整性
+
+jq -e '.files[]|has("path") and has("sha256") and has("size") and has("lines") and has("created_at")' deliverables/manifest.json >/dev/null && echo OK || echo FAIL
+
+	•	期望：OK
+
+E3. 新鲜度摘要
+
+jq -r '.summary.fresh_hours_draws_today_v2' deliverables/manifest.json
+
+	•	期望：是数字；生产验收阈值：≤ 24（小时）。
+	•	大于24：上游开奖视图未更新或BQLOC/TZ不匹配（见J节“数据新鲜度排障”）。
+
+⸻
+
+F. 视图修复与可用性（硬性）
+
+F1. 目标视图存在
+
+for v in \
+"${PROJECT}.${DS_LAB}.draws_today_v2" \
+"${PROJECT}.${DS_LAB}.p_cloud_today_canon_v" \
+"${PROJECT}.${DS_LAB}.p_map_today_canon_v" \
+"${PROJECT}.${DS_LAB}.p_size_today_canon_v" \
+"${PROJECT}.${DS_LAB}.ensemble_pool_today_v2" \
+"${PROJECT}.${DS_LAB}.signal_pool_union_v3" \
+"${PROJECT}.${DS_LAB}.lab_push_candidates_v2"; do
+  bq --location=${BQLOC} show $v >/dev/null || echo "MISS-VIEW:$v"
+done
+
+	•	期望：无 MISS-VIEW:*
+
+F2. 基本查询可跑
+
+bq --location=${BQLOC} query --use_legacy_sql=false --format=csv "SELECT COUNT(*) c FROM \`${PROJECT}.${DS_LAB}.draws_today_v2\`" 
+bq --location=${BQLOC} query --use_legacy_sql=false --format=csv "SELECT COUNT(*) c FROM \`${PROJECT}.${DS_LAB}.lab_push_candidates_v2\`"
+
+	•	期望：均返回1行计数（可为0，但SQL必须成功）。
+
+⸻
+
+G. 数据新鲜度与层级计数（硬性）
+
+G1. 运行一次
+
+bash PC28_COMPLETE_SOLUTION.sh run
+
+	•	期望：无致命报错；deliverables/layers_count.csv、deliverables/health.json 更新。
+
+G2. 四层计数
+
+column -t -s, deliverables/layers_count.csv
+
+	•	格式：draws_today ensemble_rows pool_rows cand_rows。
+	•	生产阈值：
+	•	draws_today >= 100（日活跃度）
+	•	pool_rows >= 0（可为0，取决于上游）
+	•	cand_rows >= 0（可为0，取决于阈值与覆盖封顶）
+
+若 cand_rows=0 且上游有供给，系统会自动触发 低供给自适应（p_min_base→0.55），下一tick再验。
+
+⸻
+
+H. KPI（近60分钟）合法性（硬性）
+
+H1. 结构与范围
+
+header="$(head -n1 deliverables/kpi_60m.csv)"
+echo "$header" | grep -q "market,settled,coverage,accuracy,ev,ece,brier,wilson_low,wilson_high" && echo OK || echo FAIL
+awk -F, 'NR>1{
+  ok=1;
+  if($3<0 || $3>1) ok=0;          # coverage
+  if($4<0 || $4>1) ok=0;          # accuracy
+  if($6<0 || $6>1) ok=0;          # ece
+  if($7<0 || $7>1) ok=0;          # brier
+  if($8>$9) ok=0;                 # wilson_low<=wilson_high
+  if(ok==0){print "BAD-LINE:",$0; exit 1}
+}' deliverables/kpi_60m.csv && echo OK || echo FAIL
+
+	•	期望：两行 OK。
+	•	非法行：检查score_ledger_prod_v与写账守护（本方案不造数，仅读真表）。
+
+H2. 覆盖封顶原则
+	•	coverage 应满足 <= 0.52（50%目标+少量抖动）。若超过，说明上游或视图未生效（检查 lab_push_candidates_v2 的封顶逻辑）。
+
+⸻
+
+I. 请求文件协议桥（硬性）
+
+I1. 写入请求 => 消费成功
+
+REQ_TS=$(date -u +%FT%TZ)
+echo "{\"market\":\"both\",\"bucket_floor\":0.53,\"ttl_sec\":900,\"reason\":\"acceptance\",\"ts\":\"$REQ_TS\"}" \
+  > ~/.pc28_state/bucket_floor_request.json
+
+echo "{\"mode\":\"aggressive\",\"ttl_sec\":900,\"reason\":\"acceptance\",\"ts\":\"$REQ_TS\"}" \
+  > ~/.pc28_state/mode_switch_request.json
+
+bash PC28_COMPLETE_SOLUTION.sh run
+
+	•	期望：
+	•	deliverables/last_mode_applied.json 中 mode="aggressive"；
+	•	BigQuery中 runtime_params.p_min_base 至少某一市场更新为 ≈0.53（或已在合规范围内0.51~0.95）。
+
+I2. 验证入库
+
+bq --location=${BQLOC} query --use_legacy_sql=false --format=csv \
+"SELECT market, p_min_base FROM \`${PROJECT}.${DS_LAB}.runtime_params\`"
+
+	•	期望：oe/size 行存在，p_min_base ∈ [0.51, 0.95]，符合请求或调节后区间。
+
+⸻
+
+J. Vertex自动修复（条件硬性）
+
+仅当你配置了 GCS_STAGING_DIR/GCS_OUTPUT_PREFIX 与 VERTEX_MODEL_RESOURCE/VERTEX_ENDPOINT_RESOURCE 环境变量。
+
+J1. 缺口发现与任务提交
+
+GCS_STAGING_DIR=gs://<your-bucket>/staging \
+GCS_OUTPUT_PREFIX=gs://<your-bucket>/vertex_out \
+VERTEX_MODEL_RESOURCE=projects/.../locations/us-central1/models/... \
+bash PC28_COMPLETE_SOLUTION.sh run
+
+	•	期望：日志出现“Vertex 提交：pc28_batch_*”或“今日 cloud 源齐全”。
+	•	如见“上传失败/提交失败”，执行两次run仍失败→检查服务账号权限、GCS路径、Vertex模型/端点。
+
+⸻
+
+K. 回滚与卸载（硬性）
+
+K1. 回滚视图
+
+bash PC28_COMPLETE_SOLUTION.sh rollback
+
+	•	期望：无致命报错。
+	•	如未曾备份，回滚会发出 WARN，不视为失败（首次安装无可还原）。
+
+K2. 卸载产物（保留备份日志）
+
+bash PC28_COMPLETE_SOLUTION.sh uninstall
+
+	•	期望：runs/、docs/、deliverables/、sql/ 被清理；CHANGESETS/backups/CompleteSolution 与 CHANGESETS/receipts/CompleteSolution/solution.log 保留。
+
+⸻
+
+L. 日志、打包与可追溯（硬性）
+
+L1. 日志存在且增长
+
+test -s CHANGESETS/receipts/CompleteSolution/solution.log && tail -n 3 CHANGESETS/receipts/CompleteSolution/solution.log
+
+	•	期望：日志有时间戳且有最近run记录。
+
+L2. 打包产物存在
+
+ls -1 deliverables/pc28_complete_solution_*.tar.gz | tail -n 1
+
+	•	期望：至少一个 .tar.gz 包。可选校验：tar -tzf <包名> 能列出 docs/ sql/ deliverables/ runs/。
+
+⸻
+
+M. 性能目标分段验收（强约束；数据真供给为前提）
+
+本方案不造数。性能验收基于真账：score_ledger_prod_v（tag∈{NULL, ‘prod’}）。
+验收采用“逐段达标”与“Wilson置信下界”以防偶然波动。
+
+M1. 24h覆盖率趋势
+
+bq --location=${BQLOC} query --use_legacy_sql=false --format=csv "
+WITH D AS (SELECT DATE(created_at,'${TZ}') d, market,
+           COUNTIF(outcome IN ('win','lose')) AS settled,
+           COUNT(*) AS n_all
+           FROM \`${PROJECT}.${DS_LAB}.score_ledger_prod_v\`
+           WHERE TIMESTAMP_DIFF(CURRENT_TIMESTAMP('${TZ}'), created_at, HOUR) <= 24
+           GROUP BY d, market)
+SELECT market, SUM(settled) AS settled_24h, SAFE_DIVIDE(SUM(n_all),
+       (SELECT COUNT(*) FROM \`${PROJECT}.${DS_LAB}.draws_today_v2\`)) AS cov_24h
+FROM D GROUP BY market"
+
+	•	期望：cov_24h 向0.50收敛，至少≥0.35 作为“一阶达标”。
+
+M2. 24h准确率与Wilson下界
+
+bq --location=${BQLOC} query --use_legacy_sql=false --format=csv "
+WITH S AS (
+  SELECT market, outcome
+  FROM \`${PROJECT}.${DS_LAB}.score_ledger_prod_v\`
+  WHERE TIMESTAMP_DIFF(CURRENT_TIMESTAMP('${TZ}'), created_at, HOUR) <= 24),
+C AS (SELECT market,
+             COUNTIF(outcome IN ('win','lose')) AS settled,
+             SAFE_DIVIDE(COUNTIF(outcome='win'), NULLIF(COUNTIF(outcome IN ('win','lose')),0)) AS acc
+      FROM S GROUP BY market),
+W AS (SELECT market, acc, settled,
+             SAFE_DIVIDE(acc + (POW(1.96,2)/(2*settled)) - 1.96*SQRT((acc*(1-acc)+POW(1.96,2)/(4*settled))/settled),
+                         1 + POW(1.96,2)/settled) AS wl
+      FROM C)
+SELECT market, settled, acc, wl FROM W"
+
+	•	期望：当 settled ≥ 100 时，acc ≥ 0.80 且 wl ≥ 0.60。
+	•	未达：允许PI+自切继续工作；48小时内应上升至目标区间。否则需审计上游信号质量（非本方案可控）。
+
+⸻
+
+N. Telegram推送（条件硬性）
+
+N1. 配置可用
+
+test -n "${BOT_TOKEN:-}" -a -n "${CHAT_ID:-}" && echo "TG=OK" || echo "TG=NOT_SET"
+
+	•	TG=OK 时，bash PC28_COMPLETE_SOLUTION.sh run 后应收到KPI卡片文本。
+	•	如 TG=NOT_SET：跳过，不影响其他验收项。
+
+⸻
+
+O. 失败→定位→修复（快速分流）
+	•	manifest 校验失败：回看D/E，确认 PC28_COMPLETE_SOLUTION.sh 内 11个VC字符串存在；重跑 bash PC28_INSTALLER.sh verify。
+	•	views 查询失败：检查 BQLOC/TZ、项目/数据集、权限；必要时 rollback 恢复旧视图再 install。
+	•	cand=0：先看 G 层计数；若pool有而cand=0，多半阈值过高→I节发 bucket_floor_request.json（例如0.51~0.55）。
+	•	覆盖过高 (>0.52)：检查 lab_push_candidates_v2 是否被外部覆盖或目标表未过滤 day 窗；回滚并重装。
+	•	准确率持续低：M节追溯，若 wl < 0.60 持续，系统应自动 mode=conservative + 提阈；仍低→上游模型/源需审计。
+
+⸻
+
+P. 验收表（复制即用）
+
+请把下面块复制到工单或运行本地保存为 acceptance_checklist.txt，逐项勾选（OK/FAIL + 备注）：
+
+[ ] A1 依赖齐全（bash/jq/awk/sed/date/bq）
+[ ] A2 环境变量(PROJECT/DS_DRAW/DS_LAB/BQLOC/TZ)
+[ ] A3 GCP鉴权(bq ls 成功)
+
+[ ] B1 安装器可执行
+[ ] B2 安装完成提示与自检
+[ ] B3 主脚本可执行
+
+[ ] C1 目录存在(runs/docs/deliverables/sql/receipts/backups/state)
+[ ] C2 文档四件套存在
+[ ] C3 最小产物存在
+
+[ ] D1 11个验证码全部命中（无 MISS-VC）
+
+[ ] E1 manifest 机检(files>5 & vc_passed=true)
+[ ] E2 manifest.files 字段完备
+[ ] E3 fresh_hours_draws_today_v2 ≤ 24h
+
+[ ] F1 7个视图存在
+[ ] F2 视图可查询 (COUNT(*) 成功)
+
+[ ] G1 执行 run 成功
+[ ] G2 四层计数结构正确(≥0的整数)
+
+[ ] H1 KPI表头合法 & 各列范围合规
+[ ] H2 覆盖率≤0.52（封顶生效）
+
+[ ] I1 请求文件桥工作(更新 p_min_base / last_mode_applied.json)
+[ ] I2 runtime_params 更新值在[0.51,0.95]
+
+[ ] J1 Vertex自动修复（如配置）提交/跳过合规
+
+[ ] K1 回滚成功（如有备份）
+[ ] K2 卸载清理（保留备份与日志）
+
+[ ] L1 solution.log 存在且增长
+[ ] L2 打包 tar.gz 存在
+
+[ ] M1 24h覆盖≥0.35 并向0.50收敛（真供给前提）
+[ ] M2 settled≥100 时 ACC≥0.80 且 Wilson下界≥0.60
+
+[ ] N1 Telegram 配置OK并收到KPI卡片（如配置）
+
+
+⸻
+
+结语（执行次序建议）
+	1.	安装与自检：B→C→D→E
+	2.	视图&数据：F→G
+	3.	策略&桥接：I→H
+	4.	Run巡检：G→H→L
+	5.	性能跟踪：M（在真供给下）
+	6.	Vertex回填（可选）：J
+	7.	回滚/卸载（需要时）：K
+
+只要按照本清单逐项“卡死”验收，你就能客观、可追溯地确认：
+	•	交付物完整（含 manifest 可机检、11验证码命中）；
+	•	视图链路可用、数据取值合法；
+	•	请求桥/自适应/PI/自切/应急等控制面已接通；
+	•	运维可观测（日志/打包/文档）；
+	•	在真实供给下，性能指标具备达标的机制保障与轨迹。 gpt回复下面是一份**“一次到位、可机检、零歧义”的PC28系统《验收清单》**。
+它把每一步都“卡死”到具体命令、期望输出、合格阈值与不合格分支，工程侧照抄执行即可逐项勾选。
+
+适用对象：你当前已按我提供的 PC28_INSTALLER.sh 安装过，并在仓库根目录执行。
+目录假设：${PWD} 为根目录；重要产物路径与文件名如下清单中统一。
+所需工具：bash、jq、awk、sed、date、bq（Cloud SDK）、可选 gcloud/gsutil（启用Vertex时）。
+
+⸻
+
+A. 环境与前置（硬性）
+
+A1. 依赖可用
+
+for b in bash jq awk sed date bq; do command -v $b >/dev/null || echo "MISS:$b"; done
+
+	•	期望：无 MISS:* 输出（全都安装）。
+	•	不通过处理：安装缺失组件（Google Cloud SDK / jq等），重试A1。
+
+A2. 核心环境变量就位
+
+echo "PROJECT=${PROJECT:-}" "DS_DRAW=${DS_DRAW:-}" "DS_LAB=${DS_LAB:-}" "BQLOC=${BQLOC:-}" "TZ=${TZ:-}"
+
+	•	期望：
+	•	PROJECT=wprojectl
+	•	DS_DRAW=pc28
+	•	DS_LAB=pc28_lab
+	•	BQLOC=us-central1
+	•	TZ=Asia/Shanghai
+	•	不通过处理：在当前终端 export 正确的值，或写入shell配置文件后重开终端。
+
+A3. GCP鉴权有效
+
+bq ls ${PROJECT}:${DS_DRAW} >/dev/null
+
+	•	期望：退出码0。
+	•	不通过处理：gcloud auth login / gcloud config set project ${PROJECT}。
+
+⸻
+
+B. 安装器与主脚本存在性（硬性）
+
+B1. 安装器可执行
+
+test -x PC28_INSTALLER.sh && echo OK || echo MISS
+
+	•	期望：OK
+
+B2. 运行安装过程
+
+bash PC28_INSTALLER.sh install
+
+	•	期望：末尾打印：
+	•	安装完成：PC28_COMPLETE_SOLUTION.sh 已生成。
+	•	manifest: deliverables/manifest.json
+	•	✅ 自检：true（可选）
+
+B3. 主脚本可执行
+
+test -x PC28_COMPLETE_SOLUTION.sh && echo OK || echo MISS
+
+	•	期望：OK
+
+⸻
+
+C. 目录结构与关键文件（硬性）
+
+C1. 目录存在
+
+for d in runs/metrics runs/signals runs/portfolio docs deliverables sql CHANGESETS/receipts/CompleteSolution CHANGESETS/backups/CompleteSolution ~/.pc28_state TEMP_CODE/state; do test -d "$d" || echo "MISS:$d"; done
+
+	•	期望：无 MISS:*
+
+C2. 文档四件套存在
+
+ls -1 docs/README_FULL.md docs/API_PROTOCOL.md docs/OPERATIONS.md docs/TROUBLESHOOTING.md
+
+	•	期望：4个文件列出且存在。
+
+C3. 最小产物存在
+
+ls -1 deliverables/kpi_60m.csv deliverables/layers_count.csv deliverables/health.json runs/metrics/heartbeat.txt
+
+	•	期望：4个文件列出且存在。
+
+⸻
+
+D. 11个验证码（硬性，机检项）
+
+D1. 一次性核验
+
+VC_FILE=PC28_COMPLETE_SOLUTION.sh
+for vc in \
+"PC28|ALL-IN-ONE|C1d5" "PC28|VERTEX|RstA" "PC28|VIEWFIX|Vf7x" \
+"PC28|ADAPTIVE|Ga2q"   "PC28|PI|Pi9k"     "PC28|SWITCH|Sw3h" \
+"PC28|TG|Tg4m"         "PC28|MON|Mn6b"    "PC28|EMG|Em2r" \
+"PC28|BRIDGE|Bd8y"     "PC28|VERIFY|Vy1t"; do
+  grep -q "$vc" "$VC_FILE" || echo "MISS-VC:$vc"
+done
+
+	•	期望：无 MISS-VC:* 输出。
+	•	若有缺失：请回滚/重装（见K节）。
+
+⸻
+
+E. manifest.json（硬性，机检项）
+
+E1. 基本机检
+
+test -s deliverables/manifest.json && jq -e '.files|length>5 and .vc_passed==true' deliverables/manifest.json >/dev/null && echo OK || echo FAIL
+
+	•	期望：OK
+	•	不通过处理：重新执行 bash PC28_INSTALLER.sh verify；仍失败则看 deliverables/manifest.json 内容，排查 vc_passed=false 原因（多为VC缺失或主脚本未写出）。
+
+E2. manifest字段完整性
+
+jq -e '.files[]|has("path") and has("sha256") and has("size") and has("lines") and has("created_at")' deliverables/manifest.json >/dev/null && echo OK || echo FAIL
+
+	•	期望：OK
+
+E3. 新鲜度摘要
+
+jq -r '.summary.fresh_hours_draws_today_v2' deliverables/manifest.json
+
+	•	期望：是数字；生产验收阈值：≤ 24（小时）。
+	•	大于24：上游开奖视图未更新或BQLOC/TZ不匹配（见J节“数据新鲜度排障”）。
+
+⸻
+
+F. 视图修复与可用性（硬性）
+
+F1. 目标视图存在
+
+for v in \
+"${PROJECT}.${DS_LAB}.draws_today_v2" \
+"${PROJECT}.${DS_LAB}.p_cloud_today_canon_v" \
+"${PROJECT}.${DS_LAB}.p_map_today_canon_v" \
+"${PROJECT}.${DS_LAB}.p_size_today_canon_v" \
+"${PROJECT}.${DS_LAB}.ensemble_pool_today_v2" \
+"${PROJECT}.${DS_LAB}.signal_pool_union_v3" \
+"${PROJECT}.${DS_LAB}.lab_push_candidates_v2"; do
+  bq --location=${BQLOC} show $v >/dev/null || echo "MISS-VIEW:$v"
+done
+
+	•	期望：无 MISS-VIEW:*
+
+F2. 基本查询可跑
+
+bq --location=${BQLOC} query --use_legacy_sql=false --format=csv "SELECT COUNT(*) c FROM \`${PROJECT}.${DS_LAB}.draws_today_v2\`" 
+bq --location=${BQLOC} query --use_legacy_sql=false --format=csv "SELECT COUNT(*) c FROM \`${PROJECT}.${DS_LAB}.lab_push_candidates_v2\`"
+
+	•	期望：均返回1行计数（可为0，但SQL必须成功）。
+
+⸻
+
+G. 数据新鲜度与层级计数（硬性）
+
+G1. 运行一次
+
+bash PC28_COMPLETE_SOLUTION.sh run
+
+	•	期望：无致命报错；deliverables/layers_count.csv、deliverables/health.json 更新。
+
+G2. 四层计数
+
+column -t -s, deliverables/layers_count.csv
+
+	•	格式：draws_today ensemble_rows pool_rows cand_rows。
+	•	生产阈值：
+	•	draws_today >= 100（日活跃度）
+	•	pool_rows >= 0（可为0，取决于上游）
+	•	cand_rows >= 0（可为0，取决于阈值与覆盖封顶）
+
+若 cand_rows=0 且上游有供给，系统会自动触发 低供给自适应（p_min_base→0.55），下一tick再验。
+
+⸻
+
+H. KPI（近60分钟）合法性（硬性）
+
+H1. 结构与范围
+
+header="$(head -n1 deliverables/kpi_60m.csv)"
+echo "$header" | grep -q "market,settled,coverage,accuracy,ev,ece,brier,wilson_low,wilson_high" && echo OK || echo FAIL
+awk -F, 'NR>1{
+  ok=1;
+  if($3<0 || $3>1) ok=0;          # coverage
+  if($4<0 || $4>1) ok=0;          # accuracy
+  if($6<0 || $6>1) ok=0;          # ece
+  if($7<0 || $7>1) ok=0;          # brier
+  if($8>$9) ok=0;                 # wilson_low<=wilson_high
+  if(ok==0){print "BAD-LINE:",$0; exit 1}
+}' deliverables/kpi_60m.csv && echo OK || echo FAIL
+
+	•	期望：两行 OK。
+	•	非法行：检查score_ledger_prod_v与写账守护（本方案不造数，仅读真表）。
+
+H2. 覆盖封顶原则
+	•	coverage 应满足 <= 0.52（50%目标+少量抖动）。若超过，说明上游或视图未生效（检查 lab_push_candidates_v2 的封顶逻辑）。
+
+⸻
+
+I. 请求文件协议桥（硬性）
+
+I1. 写入请求 => 消费成功
+
+REQ_TS=$(date -u +%FT%TZ)
+echo "{\"market\":\"both\",\"bucket_floor\":0.53,\"ttl_sec\":900,\"reason\":\"acceptance\",\"ts\":\"$REQ_TS\"}" \
+  > ~/.pc28_state/bucket_floor_request.json
+
+echo "{\"mode\":\"aggressive\",\"ttl_sec\":900,\"reason\":\"acceptance\",\"ts\":\"$REQ_TS\"}" \
+  > ~/.pc28_state/mode_switch_request.json
+
+bash PC28_COMPLETE_SOLUTION.sh run
+
+	•	期望：
+	•	deliverables/last_mode_applied.json 中 mode="aggressive"；
+	•	BigQuery中 runtime_params.p_min_base 至少某一市场更新为 ≈0.53（或已在合规范围内0.51~0.95）。
+
+I2. 验证入库
+
+bq --location=${BQLOC} query --use_legacy_sql=false --format=csv \
+"SELECT market, p_min_base FROM \`${PROJECT}.${DS_LAB}.runtime_params\`"
+
+	•	期望：oe/size 行存在，p_min_base ∈ [0.51, 0.95]，符合请求或调节后区间。
+
+⸻
+
+J. Vertex自动修复（条件硬性）
+
+仅当你配置了 GCS_STAGING_DIR/GCS_OUTPUT_PREFIX 与 VERTEX_MODEL_RESOURCE/VERTEX_ENDPOINT_RESOURCE 环境变量。
+
+J1. 缺口发现与任务提交
+
+GCS_STAGING_DIR=gs://<your-bucket>/staging \
+GCS_OUTPUT_PREFIX=gs://<your-bucket>/vertex_out \
+VERTEX_MODEL_RESOURCE=projects/.../locations/us-central1/models/... \
+bash PC28_COMPLETE_SOLUTION.sh run
+
+	•	期望：日志出现“Vertex 提交：pc28_batch_*”或“今日 cloud 源齐全”。
+	•	如见“上传失败/提交失败”，执行两次run仍失败→检查服务账号权限、GCS路径、Vertex模型/端点。
+
+⸻
+
+K. 回滚与卸载（硬性）
+
+K1. 回滚视图
+
+bash PC28_COMPLETE_SOLUTION.sh rollback
+
+	•	期望：无致命报错。
+	•	如未曾备份，回滚会发出 WARN，不视为失败（首次安装无可还原）。
+
+K2. 卸载产物（保留备份日志）
+
+bash PC28_COMPLETE_SOLUTION.sh uninstall
+
+	•	期望：runs/、docs/、deliverables/、sql/ 被清理；CHANGESETS/backups/CompleteSolution 与 CHANGESETS/receipts/CompleteSolution/solution.log 保留。
+
+⸻
+
+L. 日志、打包与可追溯（硬性）
+
+L1. 日志存在且增长
+
+test -s CHANGESETS/receipts/CompleteSolution/solution.log && tail -n 3 CHANGESETS/receipts/CompleteSolution/solution.log
+
+	•	期望：日志有时间戳且有最近run记录。
+
+L2. 打包产物存在
+
+ls -1 deliverables/pc28_complete_solution_*.tar.gz | tail -n 1
+
+	•	期望：至少一个 .tar.gz 包。可选校验：tar -tzf <包名> 能列出 docs/ sql/ deliverables/ runs/。
+
+⸻
+
+M. 性能目标分段验收（强约束；数据真供给为前提）
+
+本方案不造数。性能验收基于真账：score_ledger_prod_v（tag∈{NULL, ‘prod’}）。
+验收采用“逐段达标”与“Wilson置信下界”以防偶然波动。
+
+M1. 24h覆盖率趋势
+
+bq --location=${BQLOC} query --use_legacy_sql=false --format=csv "
+WITH D AS (SELECT DATE(created_at,'${TZ}') d, market,
+           COUNTIF(outcome IN ('win','lose')) AS settled,
+           COUNT(*) AS n_all
+           FROM \`${PROJECT}.${DS_LAB}.score_ledger_prod_v\`
+           WHERE TIMESTAMP_DIFF(CURRENT_TIMESTAMP('${TZ}'), created_at, HOUR) <= 24
+           GROUP BY d, market)
+SELECT market, SUM(settled) AS settled_24h, SAFE_DIVIDE(SUM(n_all),
+       (SELECT COUNT(*) FROM \`${PROJECT}.${DS_LAB}.draws_today_v2\`)) AS cov_24h
+FROM D GROUP BY market"
+
+	•	期望：cov_24h 向0.50收敛，至少≥0.35 作为“一阶达标”。
+
+M2. 24h准确率与Wilson下界
+
+bq --location=${BQLOC} query --use_legacy_sql=false --format=csv "
+WITH S AS (
+  SELECT market, outcome
+  FROM \`${PROJECT}.${DS_LAB}.score_ledger_prod_v\`
+  WHERE TIMESTAMP_DIFF(CURRENT_TIMESTAMP('${TZ}'), created_at, HOUR) <= 24),
+C AS (SELECT market,
+             COUNTIF(outcome IN ('win','lose')) AS settled,
+             SAFE_DIVIDE(COUNTIF(outcome='win'), NULLIF(COUNTIF(outcome IN ('win','lose')),0)) AS acc
+      FROM S GROUP BY market),
+W AS (SELECT market, acc, settled,
+             SAFE_DIVIDE(acc + (POW(1.96,2)/(2*settled)) - 1.96*SQRT((acc*(1-acc)+POW(1.96,2)/(4*settled))/settled),
+                         1 + POW(1.96,2)/settled) AS wl
+      FROM C)
+SELECT market, settled, acc, wl FROM W"
+
+	•	期望：当 settled ≥ 100 时，acc ≥ 0.80 且 wl ≥ 0.60。
+	•	未达：允许PI+自切继续工作；48小时内应上升至目标区间。否则需审计上游信号质量（非本方案可控）。
+
+⸻
+
+N. Telegram推送（条件硬性）
+
+N1. 配置可用
+
+test -n "${BOT_TOKEN:-}" -a -n "${CHAT_ID:-}" && echo "TG=OK" || echo "TG=NOT_SET"
+
+	•	TG=OK 时，bash PC28_COMPLETE_SOLUTION.sh run 后应收到KPI卡片文本。
+	•	如 TG=NOT_SET：跳过，不影响其他验收项。
+
+⸻
+
+O. 失败→定位→修复（快速分流）
+	•	manifest 校验失败：回看D/E，确认 PC28_COMPLETE_SOLUTION.sh 内 11个VC字符串存在；重跑 bash PC28_INSTALLER.sh verify。
+	•	views 查询失败：检查 BQLOC/TZ、项目/数据集、权限；必要时 rollback 恢复旧视图再 install。
+	•	cand=0：先看 G 层计数；若pool有而cand=0，多半阈值过高→I节发 bucket_floor_request.json（例如0.51~0.55）。
+	•	覆盖过高 (>0.52)：检查 lab_push_candidates_v2 是否被外部覆盖或目标表未过滤 day 窗；回滚并重装。
+	•	准确率持续低：M节追溯，若 wl < 0.60 持续，系统应自动 mode=conservative + 提阈；仍低→上游模型/源需审计。
+
+⸻
+
+P. 验收表（复制即用）
+
+请把下面块复制到工单或运行本地保存为 acceptance_checklist.txt，逐项勾选（OK/FAIL + 备注）：
+
+[ ] A1 依赖齐全（bash/jq/awk/sed/date/bq）
+[ ] A2 环境变量(PROJECT/DS_DRAW/DS_LAB/BQLOC/TZ)
+[ ] A3 GCP鉴权(bq ls 成功)
+
+[ ] B1 安装器可执行
+[ ] B2 安装完成提示与自检
+[ ] B3 主脚本可执行
+
+[ ] C1 目录存在(runs/docs/deliverables/sql/receipts/backups/state)
+[ ] C2 文档四件套存在
+[ ] C3 最小产物存在
+
+[ ] D1 11个验证码全部命中（无 MISS-VC）
+
+[ ] E1 manifest 机检(files>5 & vc_passed=true)
+[ ] E2 manifest.files 字段完备
+[ ] E3 fresh_hours_draws_today_v2 ≤ 24h
+
+[ ] F1 7个视图存在
+[ ] F2 视图可查询 (COUNT(*) 成功)
+
+[ ] G1 执行 run 成功
+[ ] G2 四层计数结构正确(≥0的整数)
+
+[ ] H1 KPI表头合法 & 各列范围合规
+[ ] H2 覆盖率≤0.52（封顶生效）
+
+[ ] I1 请求文件桥工作(更新 p_min_base / last_mode_applied.json)
+[ ] I2 runtime_params 更新值在[0.51,0.95]
+
+[ ] J1 Vertex自动修复（如配置）提交/跳过合规
+
+[ ] K1 回滚成功（如有备份）
+[ ] K2 卸载清理（保留备份与日志）
+
+[ ] L1 solution.log 存在且增长
+[ ] L2 打包 tar.gz 存在
+
+[ ] M1 24h覆盖≥0.35 并向0.50收敛（真供给前提）
+[ ] M2 settled≥100 时 ACC≥0.80 且 Wilson下界≥0.60
+
+[ ] N1 Telegram 配置OK并收到KPI卡片（如配置）
+
+
+⸻
+
+结语（执行次序建议）
+	1.	安装与自检：B→C→D→E
+	2.	视图&数据：F→G
+	3.	策略&桥接：I→H
+	4.	Run巡检：G→H→L
+	5.	性能跟踪：M（在真供给下）
+	6.	Vertex回填（可选）：J
+	7.	回滚/卸载（需要时）：K
+
+只要按照本清单逐项“卡死”验收，你就能客观、可追溯地确认：
+	•	交付物完整（含 manifest 可机检、11验证码命中）；
+	•	视图链路可用、数据取值合法；
+	•	请求桥/自适应/PI/自切/应急等控制面已接通；
+	•	运维可观测（日志/打包/文档）；
+	•	在真实供给下，性能指标具备达标的机制保障与轨迹。 gpt回复

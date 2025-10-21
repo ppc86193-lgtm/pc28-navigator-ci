@@ -1,0 +1,21 @@
+{
+  "test_timestamp": "2025-09-17T15:57:09.277762",
+  "test_duration_seconds": 6.107068,
+  "target_user": "项目总指挥大人'小财神'",
+  "chat_id": "8420412156",
+  "bot_token": "8094025881:AAF-7fv6d...",
+  "welcome_message": {
+    "success": false,
+    "error": "HTTP 400"
+  },
+  "status_message": {
+    "success": true,
+    "message_id": 4
+  },
+  "prediction_message": {
+    "success": true,
+    "message_id": 5
+  },
+  "messages_sent": 2,
+  "test_status": "COMPLETED"
+}

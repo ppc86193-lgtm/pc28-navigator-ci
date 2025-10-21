@@ -1,0 +1,228 @@
+{
+  "record_timestamp": "2025-09-17T12:30:00+08:00",
+  "source_documents": ["999.txt验收清单", "gtp.txt完整实现", "生产环境实际查询"],
+  
+  "production_environment_status": {
+    "data_sync": {
+      "status": "HEALTHY",
+      "latest_data": "2025-09-17 12:10:00",
+      "frequency": "3.5分钟一期",
+      "daily_volume": "333期/天",
+      "data_structure": "issue/timestamp/a/b/c标准格式"
+    },
+    
+    "upstream_api": {
+      "realtime_endpoint": "https://rijb.api.storeapi.net/api/119/259",
+      "history_endpoint": "https://rijb.api.storeapi.net/api/119/260",
+      "authentication": {
+        "appid": "45928",
+        "secret_key": "ca9edbfee35c22a0d6c4cf6722506af",
+        "method": "MD5验证"
+      },
+      "health_status": "healthy",
+      "response_time": "238ms"
+    },
+    
+    "model_performance_reality": {
+      "prediction_target": "下期大小 (next_size)",
+      "actual_accuracy": "51.49%",
+      "survival_threshold": "51.28%",
+      "performance_assessment": "刚好在生存线边缘，边际盈利模型",
+      "avg_confidence": "0.495",
+      "confidence_range": "0.25-0.75",
+      "model_quality": "GOOD - 不需要重新训练"
+    },
+    
+    "signal_generation_issues": {
+      "candidates_table_status": "全部字段NULL",
+      "p_star_range": "0.25-0.5",
+      "threshold_setting": "0.78 (过高)",
+      "coverage_at_78": "0% (完全无信号)",
+      "last_execution": "2025-09-12 (5天前)",
+      "root_cause": "参数配置问题，非模型问题"
+    }
+  },
+  
+  "adaptive_system_architecture": {
+    "pi_controller": {
+      "dual_targets": {
+        "coverage": 0.50,
+        "accuracy": 0.80
+      },
+      "modes": ["conservative", "balanced", "aggressive"],
+      "control_parameters": {
+        "conservative": {"k_cov": 0.10, "k_acc_up": 0.10, "k_acc_dn": 0.30},
+        "balanced": {"k_cov": 0.20, "k_acc_up": 0.15, "k_acc_dn": 0.35},
+        "aggressive": {"k_cov": 0.35, "k_acc_up": 0.20, "k_acc_dn": 0.40}
+      }
+    },
+    
+    "three_bucket_voting": {
+      "buckets": [0.50, 0.67, 1.00],
+      "accept_floor": "动态调整 (0.33-0.67)",
+      "weight_learning": "基于滚动表现调整权重",
+      "extreme_gates": {"hi": 0.85, "lo": 0.15}
+    },
+    
+    "autoswitch_mechanism": {
+      "coverage_thresholds": {"lo": 0.42, "hi": 0.50},
+      "accuracy_guards": {"guard": 0.80, "abort": 0.60},
+      "boost_parameters": {"ttl_min": 15, "floor": 0.33}
+    },
+    
+    "calibration_system": {
+      "method": "hybrid (Platt per-segment + temperature)",
+      "segments": ["session", "tail"],
+      "min_samples": 200,
+      "max_lookback_days": 14
+    }
+  },
+  
+  "root_cause_analysis": {
+    "issue_1_bucket_floor": {
+      "problem": "bucket下限不生效",
+      "cause": "配置冲突，max(channel.min_bucket, request.floor)取大值",
+      "impact": "覆盖率抬不起来"
+    },
+    
+    "issue_2_low_coverage": {
+      "problem": "覆盖率极低(0.75%)",
+      "cause": "conservative模式 + min_bucket=0.67 + theta=0.62过紧",
+      "impact": "候选极少，下单/期数 ≪ 50%"
+    },
+    
+    "issue_3_bigquery_errors": {
+      "problem": "BigQuery查询错误",
+      "cause": "字段/区位/日窗不一致 (issue vs period, timestamp vs ts_utc)",
+      "impact": "统计空扫，无法调参"
+    },
+    
+    "issue_4_conservative_limits": {
+      "problem": "conservative模式限制",
+      "cause": "强行偏向1.00/0.67桶 + 更高θ",
+      "impact": "保ACC但压垮COV"
+    },
+    
+    "issue_5_calibration": {
+      "problem": "校准/温度/阈值不合理",
+      "cause": "未启用短窗校准，theta=0.62偏紧",
+      "impact": "p_win偏高/偏低拖累ACC与EV"
+    }
+  },
+  
+  "immediate_fix_solution": {
+    "parameter_adjustments": {
+      "min_bucket": "0.33 (从0.67降低)",
+      "theta": "0.56 (从0.62降低)",
+      "temperature": "0.95 (校准参数)",
+      "mode": "balanced (从conservative切换)"
+    },
+    
+    "fix_script_location": "gtp.txt第1432行开始的PERF_ATTAIN脚本",
+    
+    "expected_results": {
+      "coverage_target": "50%",
+      "accuracy_target": "80%",
+      "signal_generation": "恢复正常",
+      "execution_frequency": "恢复实时执行"
+    }
+  },
+  
+  "navigator_integration_strategy": {
+    "role_definition": "智能运维大脑，监控和诊断自适应系统",
+    
+    "core_functions": [
+      "监控PI控制器的双目标收敛状态",
+      "诊断AutoSwitch机制的工作效果",
+      "智能分析参数配置的合理性",
+      "提供基于真实数据的优化建议"
+    ],
+    
+    "integration_points": [
+      "监控score_ledger表的实时写入",
+      "分析KPI短窗的统计结果",
+      "跟踪accept_floor的动态调整",
+      "验证三桶投票的权重学习"
+    ],
+    
+    "value_proposition": [
+      "不替代现有自适应系统",
+      "增强现有系统的可观测性",
+      "提供智能诊断和优化建议",
+      "确保自适应机制正常工作"
+    ]
+  },
+  
+  "technical_specifications": {
+    "bigquery_tables": {
+      "core_data": "wprojectl.pc28.draws_14w_dedup_v",
+      "predictions": "wprojectl.pc28.p_ensemble_today_norm_v", 
+      "candidates": "wprojectl.pc28.candidates_today_dedup_v",
+      "ledger": "wprojectl.pc28_lab.score_ledger",
+      "runtime_params": "wprojectl.pc28_lab.runtime_params"
+    },
+    
+    "key_parameters": {
+      "survival_threshold": 0.51282,
+      "kelly_cap": 0.05,
+      "bet_cap": 0.02,
+      "target_coverage": [0.25, 0.50],
+      "target_accuracy": 0.80,
+      "pi_window_min": 60
+    },
+    
+    "adaptive_mechanisms": {
+      "pi_controller": "双目标控制 (覆盖率/准确率)",
+      "autoswitch": "智能模式切换",
+      "calibration": "分段校准系统",
+      "risk_management": "Kelly + 回撤保护"
+    }
+  },
+  
+  "verification_checklist_status": {
+    "completed_items": [
+      "A1 依赖可用",
+      "A2 环境变量", 
+      "A3 GCP鉴权",
+      "B1 安装器可执行",
+      "B3 主脚本可执行",
+      "D1 11个验证码"
+    ],
+    
+    "failed_items": [
+      "B2 运行安装过程 (语法错误)",
+      "C2 文档四件套 (缺失)",
+      "C3 最小产物 (缺失)",
+      "F1 目标视图 (缺失)"
+    ],
+    
+    "overall_status": "部分通过，需要执行gtp.txt完整安装"
+  },
+  
+  "immediate_action_plan": {
+    "step_1": {
+      "action": "执行gtp.txt第1432行的PERF_ATTAIN修复脚本",
+      "purpose": "修复生产环境参数配置问题",
+      "expected_result": "覆盖率提升到50%，准确率保持80%"
+    },
+    
+    "step_2": {
+      "action": "部署Navigator监控系统",
+      "purpose": "监控修复后的自适应系统运行状态",
+      "expected_result": "实时监控PI控制器和AutoSwitch工作"
+    },
+    
+    "step_3": {
+      "action": "验证达标效果",
+      "purpose": "确认修复是否达到预期目标",
+      "expected_result": "系统恢复正常运行，指标达标"
+    }
+  },
+  
+  "critical_insights": {
+    "model_is_adaptive": "模型确实是自适应的，有完整的PI控制器",
+    "problem_is_config": "问题在参数配置，不在模型性能",
+    "solution_exists": "gtp.txt包含完整的修复方案",
+    "navigator_role": "智能运维大脑，不替代现有系统"
+  }
+}

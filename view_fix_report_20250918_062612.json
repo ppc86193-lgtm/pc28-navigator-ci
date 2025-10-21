@@ -1,0 +1,60 @@
+{
+  "fix_timestamp": "2025-09-18T06:26:12.836455",
+  "fix_duration_seconds": 16.861209,
+  "agent_id": "PC28 VIEW表修复Agent",
+  "supervisor": "项目总指挥大人'小财神'",
+  "view_analysis": {
+    "candidates_today_dedup_v": {
+      "has_definition": true,
+      "definition": "WITH real_ensemble AS (\n  SELECT \n    period,\n    timestamp as ts_utc,\n    FORMAT_TIMESTAMP('%Y-%m-%d %H:%M:%S', timestamp, 'Asia/Shanghai') as ts_cst,\n    p_star_ens,\n    vote_ratio,\n    n_votes\n  FROM `wprojectl.pc28.p_ensemble_today_norm_v`\n  WHERE DATE(timestamp, 'Asia/Shanghai') = CURRENT_DATE('Asia/Shanghai')\n),\nsignal_evaluation AS (\n  SELECT \n    *,\n    CASE \n      WHEN p_star_ens >= 0.60 THEN 'Gold'\n      WHEN p_star_ens >= 0.50 THEN 'Silver'\n      WHEN p_star_ens >= 0.40 THEN 'Bronze'\n      ELSE NULL\n    END as tier_candidate,\n    (1.95 * p_star_ens - 1.0) > 0 as keyB,\n    FALSE as veto\n  FROM real_ensemble\n)\nSELECT \n  CURRENT_DATE('Asia/Shanghai') as day_id,\n  period,\n  ts_utc,\n  ts_cst,\n  'normal' as session,\n  tier_candidate,\n  p_star_ens,\n  vote_ratio,\n  keyB,\n  veto\nFROM signal_evaluation\nWHERE tier_candidate IS NOT NULL\n  AND keyB = TRUE\nORDER BY ts_utc DESC",
+      "underlying_tables": [
+        "wprojectl.pc28.p_ensemble_today_norm_v"
+      ]
+    },
+    "kpi_daily": {
+      "has_definition": true,
+      "definition": "WITH acts AS (\n  SELECT\n    DATE(ts_act_utc,'Asia/Shanghai') AS day_id,\n    period_norm, ts_act_utc, tier_final,\n    take_flag, pred_target, pred_side, ev_unit\n  FROM `wprojectl.pc28.actions_dedup_today_v`\n),\njoined AS (\n  SELECT\n    a.day_id, a.tier_final, a.take_flag,\n    -- 命中口径：按target自动识别\n    CASE\n      WHEN a.pred_target = 'OE' THEN \n        CASE WHEN a.pred_side='EVEN' AND l.is_even THEN 1\n             WHEN a.pred_side!='EVEN' AND NOT l.is_even THEN 1\n             ELSE 0 END\n      WHEN a.pred_target = 'SZ' THEN \n        CASE WHEN a.pred_side='LARGE' AND l.sum>=14 THEN 1\n             WHEN a.pred_side!='LARGE' AND l.sum<14 THEN 1\n             ELSE 0 END\n      ELSE \n        CASE WHEN a.pred_side='EVEN' AND l.is_even THEN 1\n             WHEN a.pred_side!='EVEN' AND NOT l.is_even THEN 1\n             ELSE 0 END\n    END AS hit,\n    a.ev_unit\n  FROM acts a\n  JOIN `wprojectl.pc28.labels_today_v` l USING (period_norm)\n  WHERE a.take_flag = TRUE            -- ✅ on-taken\n),\nagg_g AS (\n  SELECT day_id,\n         AVG(CAST(hit AS FLOAT64)) AS acc_on_taken,\n         AVG(ev_unit) AS avg_ev,\n         COUNT(*) AS n_taken\n  FROM joined GROUP BY day_id\n),\ncoverage_data AS (\n  SELECT coverage_global FROM `wprojectl.pc28.coverage_today_v`\n)\nSELECT\n  g.day_id,\n  g.acc_on_taken AS acc_global,\n  g.avg_ev AS ev_global,\n  c.coverage_global,\n  -- 交通灯判色（按覆盖_today_v）\n  CASE\n    WHEN g.acc_on_taken >= 0.6 AND g.avg_ev >= 0.03 AND c.coverage_global >= 0.25 AND c.coverage_global <= 0.40 THEN 'GREEN'\n    WHEN g.avg_ev < 0 THEN 'RED'\n    ELSE 'YELLOW'\n  END AS traffic_light\nFROM agg_g g\nCROSS JOIN coverage_data c",
+      "underlying_tables": [
+        "wprojectl.pc28.actions_dedup_today_v",
+        "wprojectl.pc28.coverage_today_v"
+      ]
+    }
+  },
+  "table_status": {
+    "wprojectl.pc28.actions_dedup_today_v": {
+      "exists": true,
+      "row_count": 0,
+      "has_data": false
+    },
+    "wprojectl.pc28.coverage_today_v": {
+      "exists": true,
+      "row_count": 1,
+      "has_data": true
+    },
+    "wprojectl.pc28.p_ensemble_today_norm_v": {
+      "exists": true,
+      "row_count": 0,
+      "has_data": false
+    }
+  },
+  "view_fixes": {
+    "fixes_applied": [
+      "candidates底层表: 创建并插入100行",
+      "KPI底层表: 创建并插入1行"
+    ],
+    "success_count": 2
+  },
+  "monitoring_verification": {
+    "monitoring_active": true,
+    "process_count": 1,
+    "processes": [
+      "a606             42635   0.0  0.1 411020864   6288   ??  S     6:22上午   0:00.52 python3 real_time_monitor.py"
+    ]
+  },
+  "telegram_update": {
+    "success": true,
+    "message_id": 18
+  },
+  "fix_status": "COMPLETED",
+  "success_rate": 100.0
+}

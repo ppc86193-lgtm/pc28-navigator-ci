@@ -1,0 +1,39 @@
+# PC28 Navigator 配置文件
+
+# 项目信息
+project:
+  name: "PC28 Navigator"
+  version: "1.0.0"
+  purpose: "解决生产环境上游API同步中断问题"
+
+# 上游API配置
+upstream:
+  api_base: "https://rijb.api.storeapi.net/api/119"
+  appid: "45928"
+  secret_key: "ca9edbfee35c22a0d6c4cf6722506af"
+  endpoints:
+    realtime: "/259"
+    history: "/260"
+    general: "/261"
+
+# Google Cloud配置
+google_cloud:
+  project_id: "wprojectl"
+  location: "us-central1"
+  dataset: "pc28"
+
+# 核心参数
+parameters:
+  threshold_conf_raw: 0.78
+  kelly_fraction: 0.25
+  bet_cap: 0.02
+  survival_threshold: 0.51282
+
+# 监控配置
+monitoring:
+  check_interval: 60  # 秒
+  alert_thresholds:
+    api_timeout: 10   # 秒
+    data_lag: 300     # 秒
+
+

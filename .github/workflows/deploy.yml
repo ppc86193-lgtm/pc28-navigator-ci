@@ -1,0 +1,50 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run tests (quick)
+        run: |
+          ./scripts/run_tests.sh
+
+      - name: Build artifact
+        run: |
+          ./scripts/build_release.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifact
+          path: dist/*
+
+      # 示例：如需容器化与部署，请在此处添加 docker build/push 和部署步骤
+      # - name: Build Docker image
+      #   run: |
+      #     docker build -t yourrepo/yourapp:${{ github.ref_name }} .
+      # - name: Push Docker image
+      #   run: |
+      #     echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin
+      #     docker push yourrepo/yourapp:${{ github.ref_name }}
+      # - name: Deploy (placeholder)
+      #   run: |
+      #     echo "Deploying version ${{ github.ref_name }}"
+

@@ -1,0 +1,14 @@
+channels:
+  oe:
+    min_bucket: 0.33
+    theta: 0.56
+    temperature: 0.95
+    kelly_cap: 0.05
+    ev_floor: 0.0
+  size:
+    min_bucket: 0.33
+    theta: 0.56
+    temperature: 0.95
+    kelly_cap: 0.05
+    ev_floor: 0.0
+mode: balanced

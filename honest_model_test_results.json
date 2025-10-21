@@ -1,0 +1,72 @@
+{
+  "test_timestamp": 1758087372.436791,
+  "api_key_valid": true,
+  "total_models_tested": 8,
+  "successful_models": 6,
+  "failed_models": 2,
+  "success_rate": 0.75,
+  "total_cost": 0.0075632749999999995,
+  "successful_model_details": [
+    {
+      "model_id": "gpt-4o",
+      "provider": "OpenAI",
+      "latency_ms": 1344.905138015747,
+      "cost": 0.00462,
+      "tokens": 924,
+      "response": "数字[15,8,12]的和值为35，属于大数范围。"
+    },
+    {
+      "model_id": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "latency_ms": 1414.780855178833,
+      "cost": 7.499999999999999e-06,
+      "tokens": 50,
+      "response": "数字[15, 8, 12]的和为35，平均值为11.67，显示出中间偏高的趋势。"
+    },
+    {
+      "model_id": "deepseek/deepseek-r1",
+      "provider": "DeepSeek",
+      "latency_ms": 2107.1817874908447,
+      "cost": 0.00011165000000000002,
+      "tokens": 203,
+      "response": "<think>\n嗯，用户发来一个简单的测试连接请求，要求分析数字[15,8,12]。看来是在确认系统响应功能是否正常。\n\n用户可能刚接触PC28玩法，想先测试基础分析流程。这三个数字很"
+    },
+    {
+      "model_id": "qwen-max",
+      "provider": "Alibaba",
+      "latency_ms": 3367.8300380706787,
+      "cost": 0.001458,
+      "tokens": 729,
+      "response": "从数字组合看，[15,8,12]的总和为35，属于中等偏上的数值范围，其中15和12较为接近，整体分布呈现一定的集中性。"
+    },
+    {
+      "model_id": "gemini-2.5-pro",
+      "provider": "Google",
+      "latency_ms": 1930.7758808135986,
+      "cost": 0.0013650000000000001,
+      "tokens": 1092,
+      "response": "好的"
+    },
+    {
+      "model_id": "gemini-2.5-flash",
+      "provider": "Google",
+      "latency_ms": 1245.8109855651855,
+      "cost": 1.1249999999999998e-06,
+      "tokens": 15,
+      "response": ""
+    }
+  ],
+  "failed_model_details": [
+    {
+      "model_id": "claude-3-5-sonnet-latest",
+      "error": "HTTP 400",
+      "details": "{\"requestId\":\"e5a27cbc-e955-4139-8d7f-bb3c19f5cf19\",\"statusCode\":400,\"timestamp\":\"2025-09-17T05:36:0..."
+    },
+    {
+      "model_id": "claude-3-5-haiku-latest",
+      "error": "HTTP 400",
+      "details": "{\"requestId\":\"e4c806a8-6114-4019-bffa-c3ee7ec3afe3\",\"statusCode\":400,\"timestamp\":\"2025-09-17T05:36:0..."
+    }
+  ],
+  "honest_assessment": "部分模型可用，部分模型ID仍不正确"
+}

@@ -1,0 +1,49 @@
+{
+  "fix_timestamp": "2025-09-18T06:22:39.940114",
+  "fixer": "PC28综合修复Agent",
+  "supervisor": "项目总指挥大人'小财神'",
+  "fix_principle": "真正修复，不再虚假声称",
+  "fixes_executed": {
+    "candidates_table": {
+      "success": false,
+      "error": "400 wprojectl:pc28.candidates_today_dedup_v is not allowed for this operation because it currently has type VIEW.; reason: invalid, message: wprojectl:pc28.candidates_today_dedup_v is not allowed for this operation because it currently has type VIEW.\n\nLocation: us-central1\nJob ID: df2b97cb-1a05-4d9d-8f55-d96f3accf289\n"
+    },
+    "kpi_table": {
+      "success": false,
+      "error": "400 wprojectl:pc28.kpi_daily is not allowed for this operation because it currently has type VIEW.; reason: invalid, message: wprojectl:pc28.kpi_daily is not allowed for this operation because it currently has type VIEW.\n\nLocation: us-central1\nJob ID: 5c3b9d36-6d8e-4563-889e-cc26b916b55a\n"
+    },
+    "monitoring_system": {
+      "success": true,
+      "script_created": "real_time_monitor.py"
+    },
+    "telegram_function": {
+      "success": true,
+      "message_id": 15
+    },
+    "monitor_startup": {
+      "success": true,
+      "pid": 42635
+    }
+  },
+  "fixes_completed": [
+    "创建真正的实时监控系统",
+    "Telegram推送功能修复成功",
+    "实时监控系统已启动 (PID: 42635)"
+  ],
+  "fixes_failed": [
+    "candidates表修复失败: 400 wprojectl:pc28.candidates_today_dedup_v is not allowed for this operation because it currently has type VIEW.; reason: invalid, message: wprojectl:pc28.candidates_today_dedup_v is not allowed for this operation because it currently has type VIEW.\n\nLocation: us-central1\nJob ID: df2b97cb-1a05-4d9d-8f55-d96f3accf289\n",
+    "KPI表修复失败: 400 wprojectl:pc28.kpi_daily is not allowed for this operation because it currently has type VIEW.; reason: invalid, message: wprojectl:pc28.kpi_daily is not allowed for this operation because it currently has type VIEW.\n\nLocation: us-central1\nJob ID: 5c3b9d36-6d8e-4563-889e-cc26b916b55a\n"
+  ],
+  "summary": {
+    "total_fixes_attempted": 5,
+    "successful_fixes": 3,
+    "failed_fixes": 2,
+    "success_rate": 60.0,
+    "overall_status": "大部分修复成功"
+  },
+  "fix_duration_seconds": 8.530808,
+  "telegram_report_result": {
+    "success": true,
+    "message_id": 16
+  }
+}

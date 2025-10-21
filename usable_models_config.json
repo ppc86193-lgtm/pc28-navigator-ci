@@ -1,0 +1,57 @@
+{
+  "timestamp": "2025-09-17T14:08:58.127942",
+  "total_available": 262,
+  "premium_available": 57,
+  "tested_working": 8,
+  "working_models": [
+    {
+      "id": "openai/gpt-4o",
+      "name": "GPT 4o",
+      "developer": "Open AI",
+      "type": "chat-completion"
+    },
+    {
+      "id": "gpt-4o-2024-08-06",
+      "name": "GPT 4o 2024-08-06",
+      "developer": "Open AI",
+      "type": "chat-completion"
+    },
+    {
+      "id": "gpt-4o-2024-05-13",
+      "name": "GPT 4o 2024-05-13",
+      "developer": "Open AI",
+      "type": "chat-completion"
+    },
+    {
+      "id": "gpt-4o-mini",
+      "name": "GPT 4o mini",
+      "developer": "Open AI",
+      "type": "chat-completion"
+    },
+    {
+      "id": "gpt-4o-mini-2024-07-18",
+      "name": "GPT 4o mini 2024-07-18",
+      "developer": "Open AI",
+      "type": "chat-completion"
+    },
+    {
+      "id": "chatgpt-4o-latest",
+      "name": "ChatGPT 4o latest",
+      "developer": "Open AI",
+      "type": "chat-completion"
+    },
+    {
+      "id": "gpt-4o-search-preview",
+      "name": "Chat GPT 4o search preview",
+      "developer": "Open AI",
+      "type": "chat-completion"
+    },
+    {
+      "id": "gpt-4o-mini-search-preview",
+      "name": "Chat GPT 4o mini search preview",
+      "developer": "Open AI",
+      "type": "chat-completion"
+    }
+  ],
+  "recommendation": "基于实际测试的可用模型配置"
+}

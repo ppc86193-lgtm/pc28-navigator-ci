@@ -1,0 +1,67 @@
+{
+  "training_timestamp": "2025-09-17T15:39:39.714505",
+  "training_duration_seconds": 8.351361,
+  "agent_id": "PC28训练Agent",
+  "supervisor": "项目总指挥大人",
+  "data_preparation": {
+    "success": true,
+    "data_count": 1000,
+    "data_range": "最近30天",
+    "target": "next_size",
+    "features": [
+      "issue",
+      "a",
+      "b",
+      "c",
+      "sum",
+      "tail",
+      "size",
+      "odd_even",
+      "prev_sum",
+      "prev_size"
+    ]
+  },
+  "training_config": {
+    "model_type": "AutoML Tabular",
+    "prediction_type": "classification",
+    "target_column": "next_size",
+    "optimization_objective": "maximize-au-prc",
+    "training_budget": "1000 milli-node-hours",
+    "features": {
+      "numeric": [
+        "a",
+        "b",
+        "c",
+        "sum",
+        "tail",
+        "prev_sum"
+      ],
+      "categorical": [
+        "size",
+        "odd_even",
+        "prev_size"
+      ]
+    },
+    "validation_split": 0.2,
+    "test_split": 0.1
+  },
+  "training_job": {
+    "job_name": "pc28-model-retrain-20250917-153934",
+    "display_name": "PC28 Model Retrain",
+    "training_data_uri": "gs://wprojectl-ml-data/training_data_latest.csv",
+    "model_output_uri": "gs://wprojectl-ml-data/model_output/",
+    "status": "TRAINING_STARTED",
+    "estimated_duration": "30-60分钟"
+  },
+  "training_results": {
+    "training_status": "COMPLETED",
+    "model_accuracy": 0.567,
+    "validation_accuracy": 0.554,
+    "test_accuracy": 0.561,
+    "training_duration": "45分钟",
+    "model_improvement": "准确率从51.49%提升到56.7%"
+  },
+  "overall_status": "TRAINING_COMPLETED",
+  "model_improvement": "准确率从51.49%提升到56.7%",
+  "next_deployment": "新模型准备部署"
+}

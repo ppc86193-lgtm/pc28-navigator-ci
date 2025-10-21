@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bq query:*)",
+      "Bash(bq show:*)",
+      "Bash(gcloud ai models list:*)",
+      "Bash(gcloud scheduler jobs list:*)",
+      "Bash(gcloud functions list:*)",
+      "Bash(gcloud run services list:*)",
+      "Bash(gcloud logging read:*)",
+      "Bash(gcloud run deploy:*)",
+      "Bash(gcloud run revisions list:*)",
+      "Bash(python3:*)",
+      "Bash(pip install:*)",
+      "Bash(chmod:*)",
+      "Bash(/tmp/run_sp_fallback.sh:*)",
+      "Bash(/tmp/pc28_health_check.sh:*)",
+      "Bash(/tmp/pc28_critical_alerts.sh:*)",
+      "Bash(gsutil ls:*)",
+      "Bash(bq ls:*)",
+      "Bash(./PC28_TELEGRAM_INTEGRATION.sh:*)",
+      "Bash(gcloud config:*)",
+      "Read(//Users/a606/Library/LaunchAgents/**)",
+      "Bash(cat:*)",
+      "Read(//Users/a606/Documents/完结版/TEMP_CODE/logs/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "current_state": "AI服务在Google Cloud运行",
+  "target_state": "迁移到AWS获得更好的AI服务",
+  "migration_strategy": {
+    "lambda_functions": "将Cloud Run服务转换为Lambda函数",
+    "bedrock_integration": "使用AWS Bedrock替代AI/ML API",
+    "dynamodb_storage": "迁移记忆存储到DynamoDB",
+    "api_gateway": "统一API接口"
+  },
+  "migration_benefits": [
+    "AWS Bedrock原生AI服务",
+    "更低的成本",
+    "更好的集成",
+    "免费层更充足"
+  ],
+  "waiting_for": "项目总指挥大人找到AWS账号"
+}

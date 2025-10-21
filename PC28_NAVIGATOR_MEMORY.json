@@ -1,0 +1,68 @@
+{
+  "project_identity": {
+    "name": "PC28 Navigator",
+    "purpose": "13个Agent + 1人工位的智能航管塔系统",
+    "supervisor": "项目总指挥大人",
+    "ai_assistant": "Cursor内置Claude Sonnet 4"
+  },
+  "critical_discoveries": {
+    "production_issues": {
+      "signal_generation_stopped": "信号生成停摆5天",
+      "candidates_table_null": "candidates_today_dedup_v全部字段NULL",
+      "p_star_anomaly": "所有p_star_ens显示0.75，过于一致",
+      "vertex_ai_stalled": "Vertex AI预测停滞9小时",
+      "root_cause": "BigQuery视图字段名错误和数据流中断"
+    },
+    "model_analysis": {
+      "vertex_ai_models": "10个专业模型存在但预测中断",
+      "model_accuracy": "51.49%，刚好在生存线51.28%边缘",
+      "model_quality": "边际盈利模型，不是差模型",
+      "threshold_issue": "0.78阈值过高导致0%覆盖率"
+    },
+    "ai_resources": {
+      "aiml_api_models": "262个模型可用",
+      "working_models": "14个已验证可用",
+      "api_key": "9030c9fcbc474c258dca7ff39b3a20e6",
+      "cost": "$50/月不限量调用"
+    },
+    "cloud_resources": {
+      "google_cloud": "$300×20账号=$6000",
+      "microsoft_azure": "几百美金×几个账号",
+      "amazon_aws": "几个体验账号",
+      "total_value": "$8000+云资源"
+    }
+  },
+  "technical_findings": {
+    "gtp_txt_analysis": {
+      "file_size": "10,827行完整实现",
+      "contains": "PI控制器+AutoSwitch+三桶投票+校准系统",
+      "fix_script": "第1432行PERF_ATTAIN修复脚本",
+      "self_adaptive": "完整的自适应交易系统"
+    },
+    "verification_checklist": {
+      "source": "999.txt验收清单",
+      "total_items": "多项验收标准",
+      "passed": "A1/A2/A3/B1/B3/D1",
+      "failed": "B2/C2/C3/F1",
+      "status": "部分通过"
+    },
+    "current_fixes": {
+      "candidates_view_fixed": "已修复BigQuery视图语法",
+      "signal_generation_restored": "信号生成已恢复",
+      "coverage_improved": "从0%提升到有信号",
+      "needs_verification": "需要验证数据真实性"
+    }
+  },
+  "system_architecture": {
+    "multi_agent_design": "13个Agent + 1人工位",
+    "time_constitution": "五种时间严格分离",
+    "tdr_mechanism": "触发-处置-恢复机制",
+    "three_powers_separation": "量化/AI/人工职责分离"
+  },
+  "immediate_priorities": {
+    "fix_production": "恢复PC28生产环境正常运行",
+    "verify_data_authenticity": "验证修复后数据的真实性",
+    "deploy_to_cloud": "真正部署到云端避免本地卡顿",
+    "implement_monitoring": "建立24/7智能监控"
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "fix_timestamp": "2025-09-17T15:55:57.616205",
+  "fix_duration_seconds": 8.715318,
+  "agent_id": "PC28 BigQuery修复Agent",
+  "supervisor": "项目总指挥大人'小财神'",
+  "schema_analysis": {
+    "pc28.draws_14w_dedup_v": {
+      "exists": true,
+      "field_count": 6,
+      "fields": [
+        "issue",
+        "timestamp",
+        "a",
+        "b",
+        "c",
+        "rn"
+      ],
+      "sample_fields": [
+        "issue",
+        "timestamp",
+        "a",
+        "b",
+        "c",
+        "rn"
+      ]
+    },
+    "pc28.candidates_today_dedup_v": {
+      "exists": true,
+      "field_count": 10,
+      "fields": [
+        "day_id",
+        "period",
+        "ts_utc",
+        "ts_cst",
+        "session",
+        "tier_candidate",
+        "p_star_ens",
+        "vote_ratio",
+        "keyB",
+        "veto"
+      ],
+      "sample_fields": [
+        "day_id",
+        "period",
+        "ts_utc",
+        "ts_cst",
+        "session",
+        "tier_candidate",
+        "p_star_ens",
+        "vote_ratio",
+        "keyB",
+        "veto"
+      ]
+    },
+    "pc28.kpi_daily": {
+      "exists": true,
+      "field_count": 5,
+      "fields": [
+        "day_id",
+        "acc_global",
+        "ev_global",
+        "coverage_global",
+        "traffic_light"
+      ],
+      "sample_fields": [
+        "day_id",
+        "acc_global",
+        "ev_global",
+        "coverage_global",
+        "traffic_light"
+      ]
+    },
+    "pc28.coverage_today_v": {
+      "exists": true,
+      "field_count": 3,
+      "fields": [
+        "n_take",
+        "n_cand",
+        "coverage_global"
+      ],
+      "sample_fields": [
+        "n_take",
+        "n_cand",
+        "coverage_global"
+      ]
+    }
+  },
+  "query_test_results": {
+    "draws表基础查询": {
+      "success": true,
+      "row_count": 3,
+      "available_fields": [
+        "issue",
+        "timestamp",
+        "a",
+        "b",
+        "c",
+        "rn"
+      ],
+      "sample_data": {
+        "issue": "3330688",
+        "timestamp": 

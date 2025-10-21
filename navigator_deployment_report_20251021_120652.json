@@ -1,0 +1,120 @@
+{
+  "deployment_timestamp": "2025-10-21T12:06:52.333623",
+  "deployment_duration_seconds": 48.02648305892944,
+  "ai_models_deployed": 14,
+  "working_models": [
+    {
+      "model_id": "gpt-4o",
+      "role": "主力分析",
+      "provider": "OpenAI",
+      "status": "DEPLOYED",
+      "response": "系统部署测试已确认就绪。如果需要进一步的帮助或有具体的测试步骤，请随"
+    },
+    {
+      "model_id": "gpt-4o-mini",
+      "role": "快速检测",
+      "provider": "OpenAI",
+      "status": "DEPLOYED",
+      "response": "系统已准备就绪，请提供具体的测试需求或指令，我将协助您进行"
+    },
+    {
+      "model_id": "o3-mini",
+      "role": "推理验证",
+      "provider": "OpenAI",
+      "status": "DEPLOYED",
+      "response": ""
+    },
+    {
+      "model_id": "openai/gpt-5-2025-08-07",
+      "role": "深度分析",
+      "provider": "OpenAI",
+      "status": "DEPLOYED",
+      "response": ""
+    },
+    {
+      "model_id": "google/gemini-2.5-pro",
+      "role": "多模态分析",
+      "provider": "Google",
+      "status": "DEPLOYED",
+      "response": ""
+    },
+    {
+      "model_id": "google/gemini-2.5-flash",
+      "role": "实时监控",
+      "provider": "Google",
+      "status": "DEPLOYED",
+      "response": ""
+    },
+    {
+      "model_id": "gemini-2.0-flash",
+      "role": "快速响应",
+      "provider": "Google",
+      "status": "DEPLOYED",
+      "response": "收到！PC28 Navigator 系统部署测试已确认就绪。请开始您的测试，祝"
+    },
+    {
+      "model_id": "deepseek-chat",
+      "role": "对话分析",
+      "provider": "DeepSeek",
+      "status": "DEPLOYED",
+      "response": "PC28 Navigator系统部署测试确认流程已启动，正在执行以下自检程序：\n\n1."
+    },
+    {
+      "model_id": "deepseek/deepseek-r1",
+      "role": "数学推理",
+      "provider": "DeepSeek",
+      "status": "DEPLOYED",
+      "response": "<think>\n我们正在扮演一个数学推理Agent，现在系统部署测试，需要确认就绪。\n"
+    },
+    {
+      "model_id": "deepseek-reasoner",
+      "role": "逻辑推理",
+      "provider": "DeepSeek",
+      "status": "DEPLOYED",
+      "response": "<think>\n嗯，用户发来的是系统部署测试的确认请求。作为PC28 Navigator的逻辑"
+    },
+    {
+      "model_id": "qwen-max",
+      "role": "中文分析",
+      "provider": "Alibaba",
+      "status": "DEPLOYED",
+      "response": "系统已就绪，随时可以进行部署测试。请告知具体需求或测试内容，我"
+    },
+    {
+      "model_id": "qwen-plus",
+      "role": "快速中文",
+      "provider": "Alibaba",
+      "status": "DEPLOYED",
+      "response": "PC28 Navigator系统已就绪，部署测试准备完成。  \n当前环境：测试模式"
+    },
+    {
+      "model_id": "x-ai/grok-4-07-09",
+      "role": "复杂诊断",
+      "provider": "xAI",
+      "status": "DEPLOYED",
+      "response": "系统就绪。PC28 Navigator复杂诊断Agent已激活，准备执行诊断任务。请提供进一步"
+    },
+    {
+      "model_id": "x-ai/grok-3-beta",
+      "role": "创新分析",
+      "provider": "xAI",
+      "status": "DEPLOYED",
+      "response": "确认就绪！PC28 Navigator 创新分析 Agent 已上线，随时为您提供支持。请提供"
+    }
+  ],
+  "gpt5_analysis": {
+    "error": "404 Not found: Dataset wprojectl:pc28 was not found in location us-central1; reason: notFound, message: Not found: Dataset wprojectl:pc28 was not found in location us-central1\n\nLocation: us-central1\nJob ID: a03e997f-28a8-48a2-a0c5-2a05f8805247\n"
+  },
+  "monitoring_active": true,
+  "resource_status": {
+    "aiml_api": "无限量可用",
+    "google_cloud": "$300免费额度",
+    "deployment_cost": "包月内无额外成本"
+  },
+  "next_steps": [
+    "持续实时监控",
+    "定期深度分析",
+    "问题自动诊断",
+    "智能优化建议"
+  ]
+}

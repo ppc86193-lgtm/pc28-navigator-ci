@@ -1,0 +1,47 @@
+{
+  "steps": [
+    {
+      "name": "gcr.io/cloud-builders/docker",
+      "args": [
+        "build",
+        "-t",
+        "gcr.io/wprojectl/pc28-training-agent:latest",
+        "-f",
+        "Dockerfile.training",
+        "."
+      ]
+    },
+    {
+      "name": "gcr.io/cloud-builders/docker",
+      "args": [
+        "push",
+        "gcr.io/wprojectl/pc28-training-agent:latest"
+      ]
+    },
+    {
+      "name": "gcr.io/cloud-builders/gcloud",
+      "args": [
+        "run",
+        "deploy",
+        "pc28-training-agent",
+        "--image",
+        "gcr.io/wprojectl/pc28-training-agent:latest",
+        "--platform",
+        "managed",
+        "--region",
+        "us-central1",
+        "--allow-unauthenticated",
+        "--memory",
+        "4Gi",
+        "--cpu",
+        "2",
+        "--set-env-vars",
+        "PROJECT_ID=wprojectl,LOCATION=us-central1,WORK_MODE=REAL_EXECUTION"
+      ]
+    }
+  ],
+  "images": [
+    "gcr.io/wprojectl/pc28-training-agent:latest"
+  ],
+  "timeout": "1200s"
+}

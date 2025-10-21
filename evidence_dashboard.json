@@ -1,0 +1,23 @@
+{
+  "last_updated": "2025-09-18T06:37:55.668005",
+  "system_name": "PC28 Truth-Over-Claims 证据系统",
+  "supervisor": "项目总指挥大人'小财神'",
+  "evidence_sources": {
+    "heartbeat_table": "wprojectl.pc28_monitor.heartbeats",
+    "process_verification": "ps aux | grep real_heartbeat_monitor.py",
+    "telegram_tracking": "telegram_verification_log.json",
+    "bigquery_data": "wprojectl.pc28.draws_14w_dedup_v"
+  },
+  "verification_commands": {
+    "heartbeat_check": "bq query --project_id=wprojectl 'SELECT * FROM `wprojectl.pc28_monitor.heartbeats` ORDER BY ts DESC LIMIT 5'",
+    "process_check": "ps aux | grep real_heartbeat_monitor.py",
+    "telegram_check": "cat telegram_verification_log.json",
+    "truth_verify": "./verify_truth_improved.sh"
+  },
+  "current_status": {
+    "heartbeat_system": "RUNNING",
+    "telegram_push": "WORKING",
+    "process_monitoring": "ACTIVE",
+    "evidence_tracking": "ENABLED"
+  }
+}

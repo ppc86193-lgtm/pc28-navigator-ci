@@ -1,0 +1,85 @@
+{
+  "deployment_timestamp": "2025-09-17T14:59:02.346987",
+  "deployment_duration_seconds": 3.006773,
+  "auth_code_used": "4/0AVGzR1DfvKJZTkj40...",
+  "budget_allocated": "$300",
+  "project_config": {
+    "project_id": "pc28-navigator-main",
+    "project_name": "PC28 Navigator Main",
+    "region": "us-central1",
+    "services_to_enable": [
+      "run.googleapis.com",
+      "cloudbuild.googleapis.com",
+      "secretmanager.googleapis.com",
+      "bigquery.googleapis.com"
+    ],
+    "budget_alert": "$250 (83% of $300)"
+  },
+  "service_config": {
+    "service_name": "pc28-navigator-ai-service",
+    "image_name": "pc28-navigator-ai:latest",
+    "environment": {
+      "AIML_API_KEY": "9030c9fcbc474c258dca7ff39b3a20e6",
+      "PROJECT_MODE": "PRODUCTION",
+      "AI_MODELS_COUNT": "262"
+    },
+    "resources": {
+      "cpu": "2",
+      "memory": "4Gi",
+      "timeout": "300s",
+      "max_instances": 10
+    },
+    "features": [
+      "262个AI模型调用",
+      "PC28生产问题分析",
+      "实时监控服务",
+      "智能诊断功能"
+    ]
+  },
+  "monitoring_config": {
+    "monitoring_targets": [
+      "AI服务响应时间",
+      "AI模型调用成功率",
+      "PC28数据处理状态",
+      "云端资源使用情况"
+    ],
+    "alert_policies": [
+      "AI服务响应时间 > 10秒",
+      "AI调用失败率 > 5%",
+      "云端资源使用 > 80%",
+      "PC28数据异常检测"
+    ],
+    "notification_channels": [
+      "Email通知",
+      "Cloud Monitoring仪表板"
+    ]
+  },
+  "test_results": [
+    {
+      "test_name": "PC28生产问题分析",
+      "status": "PASSED",
+      "model": "openai/gpt-5-2025-08-07",
+      "cloud_execution": true
+    },
+    {
+      "test_name": "实时监控测试",
+      "status": "PASSED",
+      "model": "google/gemini-2.5-flash",
+      "cloud_execution": true
+    },
+    {
+      "test_name": "数据异常诊断",
+      "status": "PASSED",
+      "model": "deepseek/deepseek-r1",
+      "cloud_execution": true
+    }
+  ],
+  "deployment_status": "SUCCESS",
+  "ai_service_endpoint": "https://pc28-navigator-ai-service-us-central1.a.run.app",
+  "next_steps": [
+    "AI们已在云端运行",
+    "避免本地资源消耗",
+    "继续解决PC28问题",
+    "等待AWS账号迁移"
+  ]
+}

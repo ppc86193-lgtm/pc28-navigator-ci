@@ -1,0 +1,70 @@
+{
+  "integration_timestamp": "2025-09-17T15:56:23.385300",
+  "integration_duration_seconds": 5.3075,
+  "bot_token": "8094025881:AAF-7fv6d...",
+  "bot_username": "sokklds22_bot",
+  "bot_url": "t.me/sokklds22_bot",
+  "supervisor": "项目总指挥大人",
+  "bot_verification": {
+    "success": true,
+    "bot_info": {
+      "id": 8094025881,
+      "is_bot": true,
+      "first_name": "sokkls22_bot",
+      "username": "sokklds22_bot",
+      "can_join_groups": true,
+      "can_read_all_group_messages": false,
+      "supports_inline_queries": false,
+      "can_connect_to_business": false,
+      "has_main_web_app": false
+    }
+  },
+  "commands_setup": {
+    "success": true,
+    "commands": [
+      {
+        "command": "start",
+        "description": "启动PC28监控"
+      },
+      {
+        "command": "status",
+        "description": "查看系统状态"
+      },
+      {
+        "command": "latest",
+        "description": "最新预测结果"
+      },
+      {
+        "command": "kpi",
+        "description": "今日KPI指标"
+      },
+      {
+        "command": "coverage",
+        "description": "覆盖率统计"
+      },
+      {
+        "command": "help",
+        "description": "帮助信息"
+      }
+    ]
+  },
+  "latest_predictions": {
+    "success": false,
+    "error": "no row field 'issue'"
+  },
+  "daily_kpi": {
+    "success": false,
+    "error": "未找到今日KPI数据"
+  },
+  "bot_polling": {
+    "status": "LISTENING",
+    "bot_url": "t.me/sokklds22_bot"
+  },
+  "integration_status": "COMPLETED",
+  "ready_for_push": true,
+  "next_steps": [
+    "项目总指挥大人访问 t.me/sokklds22_bot",
+    "发送 /start 激活Bot",
+    "Bot将自动推送PC28实时数据"
+  ]
+}

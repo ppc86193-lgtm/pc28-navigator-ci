@@ -1,0 +1,63 @@
+{
+  "steps": [
+    {
+      "name": "gcr.io/cloud-builders/docker",
+      "args": [
+        "build",
+        "-t",
+        "gcr.io/wprojectl/pc28-agent:latest",
+        "-f",
+        "Dockerfile.fixed",
+        "."
+      ],
+      "env": [
+        "PROJECT_ID=wprojectl"
+      ]
+    },
+    {
+      "name": "gcr.io/cloud-builders/docker",
+      "args": [
+        "push",
+        "gcr.io/wprojectl/pc28-agent:latest"
+      ]
+    },
+    {
+      "name": "gcr.io/cloud-builders/gcloud",
+      "args": [
+        "run",
+        "deploy",
+        "pc28-agent",
+        "--image",
+        "gcr.io/wprojectl/pc28-agent:latest",
+        "--platform",
+        "managed",
+        "--region",
+        "us-central1",
+        "--allow-unauthenticated",
+        "--memory",
+        "2Gi",
+        "--cpu",
+        "1",
+        "--port",
+        "8080",
+        "--set-env-vars",
+        "PROJECT_ID=wprojectl,LOCATION=us-central1,WORK_MODE=CLOUD_EXECUTION",
+        "--max-instances",
+        "10",
+        "--timeout",
+        "300"
+      ],
+      "env": [
+        "PROJECT_ID=wprojectl"
+      ]
+    }
+  ],
+  "images": [
+    "gcr.io/wprojectl/pc28-agent:latest"
+  ],
+  "options": {
+    "logging": "CLOUD_LOGGING_ONLY",
+    "machineType": "N1_HIGHCPU_8"
+  },
+  "timeout": "1800s"
+}

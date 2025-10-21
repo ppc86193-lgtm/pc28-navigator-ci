@@ -1,0 +1,30 @@
+{
+  "displayName": "pc28-training-job-20250917-154410",
+  "jobSpec": {
+    "workerPoolSpecs": [
+      {
+        "machineSpec": {
+          "machineType": "n1-standard-4"
+        },
+        "replicaCount": 1,
+        "containerSpec": {
+          "imageUri": "gcr.io/wprojectl/pc28-training-agent:latest",
+          "env": [
+            {
+              "name": "PROJECT_ID",
+              "value": "wprojectl"
+            },
+            {
+              "name": "LOCATION",
+              "value": "us-central1"
+            },
+            {
+              "name": "TRAINING_MODE",
+              "value": "VERTEX_AI"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

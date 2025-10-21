@@ -1,0 +1,98 @@
+{
+  "diagnosis_time": "2025-09-17T12:17:26.814021",
+  "upstream_api": {
+    "status": "healthy",
+    "latency_ms": 238.1589412689209,
+    "response": {
+      "message": "sign值验证不通过，加密规则请前往帮助中心查看",
+      "time": 1758082638,
+      "codeid": 10003,
+      "retdata": {
+        "string": "appid45928formatjsontime1758082638"
+      }
+    },
+    "current_issue": null,
+    "next_issue": null,
+    "award_time": null
+  },
+  "historical_performance": {
+    "analysis_period": "最近7天",
+    "total_periods": 102,
+    "avg_p_star": 0.4950980392156861,
+    "avg_vote_ratio": 0.9411764705882352,
+    "avg_n_votes": 1.5686274509803924,
+    "coverage_analysis": {
+      "at_78_threshold": 0.0,
+      "at_60_threshold": 0.09803921568627451,
+      "at_50_threshold": 0.8823529411764706,
+      "at_40_threshold": 0.8823529411764706
+    },
+    "threshold_recommendation": {
+      "current_threshold": 0.78,
+      "recommended_threshold": 0.78,
+      "reasoning": "平均p_star(0.495)低于生存线，需要优化模型而非降低阈值",
+      "risk_assessment": "低风险"
+    }
+  },
+  "signal_chain": {
+    "chain_checks": {
+      "p_ensemble_today_norm_v": {
+        "total_count": 102,
+        "valid_periods": 102,
+        "latest_timestamp": "2025-09-17T03:57:30+00:00",
+        "status": "OK"
+      },
+      "ensemble_today_enhanced": {
+        "total_count": 0,
+        "valid_periods": 0,
+        "latest_timestamp": null,
+        "status": "EMPTY"
+      },
+      "ensemble_today_guarded": {
+        "total_count": 0,
+        "valid_periods": 0,
+        "latest_timestamp": null,
+        "status": "EMPTY"
+      },
+      "candidates_today_dedup_v": {
+        "status": "ERROR",
+        "error": "400 Unrecognized name: timestamp at [7:28]; reason: invalidQuery, location: query, message: Unrecognized name: timestamp at [7:28]\n\nLocation: us-central1\nJob ID: bb39cdb2-edc5-491f-b2b7-760bcb395703\n"
+      }
+    },
+    "breakdown_analysis": {
+      "working_stages": [
+        "p_ensemble_today_norm_v"
+      ],
+      "failed_stages": [
+        "ensemble_today_enhanced",
+        "ensemble_today_guarded",
+        "candidates_today_dedup_v"
+      ],
+      "breakdown_point": "最终候选信号生成失败",
+      "severity": "CRITICAL"
+    },
+    "repair_recommendations": [
+      "🔧 修复candidates_today_dedup_v视图SQL语法",
+      "🔍 检查consensus_candidates_api_v视图定义",
+      "🚨 启动紧急修复模式",
+      "📞 立即通知运维团队"
+    ]
+  },
+  "integration_summary": {
+    "overall_health": "CRITICAL",
+    "critical_issues": [
+      "平均p_star(0.495)低于生存线",
+      "当前阈值下覆盖率为0",
+      "最终候选信号生成失败"
+    ],
+    "immediate_actions": [
+      "优化模型或调整策略",
+      "调整阈值或优化模型",
+      "🔧 修复candidates_today_dedup_v视图SQL语法",
+      "🔍 检查consensus_candidates_api_v视图定义",
+      "🚨 启动紧急修复模式",
+      "📞 立即通知运维团队"
+    ],
+    "long_term_optimizations": []
+  }
+}

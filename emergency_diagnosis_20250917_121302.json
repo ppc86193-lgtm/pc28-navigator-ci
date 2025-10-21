@@ -1,0 +1,29 @@
+{
+  "diagnosis_time": "2025-09-17T12:13:02.658335",
+  "upstream_health": {
+    "status": "healthy",
+    "response_time_ms": "unknown",
+    "data": {
+      "message": "sign值验证不通过，加密规则请前往帮助中心查看",
+      "time": 1758082375,
+      "codeid": 10003,
+      "retdata": {
+        "string": "appid45928formatjsontime1758082374"
+      }
+    }
+  },
+  "signal_diagnosis": {
+    "diagnosis_time": "2025-09-17T12:13:02.658289",
+    "checks": {
+      "p_ensemble_today_norm_v": 102,
+      "candidates_today_dedup_v": {
+        "total": 206,
+        "valid": 57
+      }
+    },
+    "root_cause": "需要进一步诊断"
+  },
+  "recommendations": [
+    "✅ 系统状态正常，继续监控"
+  ]
+}

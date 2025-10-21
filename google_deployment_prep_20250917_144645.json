@@ -1,0 +1,118 @@
+{
+  "preparation_timestamp": "2025-09-17T14:46:45.291158",
+  "target_platform": "Google Cloud (临时) → AWS (最终)",
+  "google_architecture": {
+    "project_allocation": {
+      "production_projects": {
+        "count": 5,
+        "purpose": "生产环境AI服务",
+        "services": [
+          "Cloud Run",
+          "Cloud Functions",
+          "BigQuery"
+        ]
+      },
+      "development_projects": {
+        "count": 5,
+        "purpose": "开发测试环境",
+        "services": [
+          "Cloud Build",
+          "Container Registry"
+        ]
+      },
+      "ai_analysis_projects": {
+        "count": 5,
+        "purpose": "AI分析集群",
+        "services": [
+          "Vertex AI",
+          "AutoML",
+          "AI Platform"
+        ]
+      },
+      "backup_projects": {
+        "count": 5,
+        "purpose": "备份和容灾",
+        "services": [
+          "Cloud Storage",
+          "Cloud SQL"
+        ]
+      }
+    },
+    "ai_service_distribution": {
+      "primary_ai_cluster": {
+        "location": "us-central1",
+        "services": [
+          "Cloud Run容器 - 运行AI/ML API调用",
+          "Cloud Functions - 轻量AI任务",
+          "Cloud Scheduler - 定时AI分析"
+        ]
+      },
+      "ai_models_integration": {
+        "aiml_api_models": "通过Cloud Run调用262个模型",
+        "vertex_ai_models": "使用现有10个专业模型",
+        "google_ai_models": "Gemini系列原生集成"
+      }
+    },
+    "deployment_strategy": {
+      "phase_1": "部署AI调用服务到Cloud Run",
+      "phase_2": "建立AI任务队列和调度",
+      "phase_3": "实现AI结果缓存和优化",
+      "phase_4": "等待AWS账号后迁移部分服务"
+    }
+  },
+  "cloud_run_config": {
+    "service_name": "pc28-navigator-ai",
+    "image": "gcr.io/pc28-navigator/ai-service:latest",
+    "region": "us-central1",
+    "environment_variables": {
+      "AIML_API_KEY": "9030c9fcbc474c258dca7ff39b3a20e6",
+      "PROJECT_ID": "wprojectl",
+      "DATASET": "pc28"
+    },
+    "resources": {
+      "cpu": "2",
+      "memory": "4Gi",
+      "max_instances": 100,
+      "min_instances": 1
+    },
+    "features": [
+      "自动扩缩容",
+      "按需付费",
+      "HTTPS端点",
+      "负载均衡"
+    ]
+  },
+  "container_config": {
+    "container_ready": true,
+    "files_created": [
+      "Dockerfile",
+      "requirements.txt",
+      "ai_service.py"
+    ],
+    "deployment_ready": true
+  },
+  "aws_migration_plan": {
+    "current_state": "AI服务在Google Cloud运行",
+    "target_state": "迁移到AWS获得更好的AI服务",
+    "migration_strategy": {
+      "lambda_functions": "将Cloud Run服务转换为Lambda函数",
+      "bedrock_integration": "使用AWS Bedrock替代AI/ML API",
+      "dynamodb_storage": "迁移记忆存储到DynamoDB",
+      "api_gateway": "统一API接口"
+    },
+    "migration_benefits": [
+      "AWS Bedrock原生AI服务",
+      "更低的成本",
+      "更好的集成",
+      "免费层更充足"
+    ],
+    "waiting_for": "项目总指挥大人找到AWS账号"
+  },
+  "status": "Google部署就绪，等待AWS账号",
+  "next_steps": [
+    "等待项目总指挥大人找到AWS账号",
+    "先在Google Cloud部署AI服务",
+    "准备AWS迁移",
+    "继续解决PC28生产问题"
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "deployment_timestamp": "2025-09-17T15:47:48.270034",
+  "deployment_duration_seconds": 138.444092,
+  "project_id": "wprojectl",
+  "location": "us-central1",
+  "supervisor": "项目总指挥大人",
+  "deployment_method": "Cloud Build (绕过本地Docker)",
+  "cloudbuild_config": {
+    "config_file": "cloudbuild.yaml",
+    "build_steps": 3,
+    "timeout": "1200s",
+    "status": "CREATED"
+  },
+  "api_enablement": {
+    "required_apis": [
+      "cloudbuild.googleapis.com",
+      "run.googleapis.com",
+      "containerregistry.googleapis.com",
+      "aiplatform.googleapis.com",
+      "bigquery.googleapis.com"
+    ],
+    "enabled_apis": [
+      {
+        "api": "cloudbuild.googleapis.com",
+        "status": "ENABLED"
+      },
+      {
+        "api": "run.googleapis.com",
+        "status": "ENABLED"
+      },
+      {
+        "api": "containerregistry.googleapis.com",
+        "status": "ENABLED"
+      },
+      {
+        "api": "aiplatform.googleapis.com",
+        "status": "ENABLED"
+      },
+      {
+        "api": "bigquery.googleapis.com",
+        "status": "ENABLED"
+      }
+    ],
+    "success_count": 5
+  },
+  "build_submission": {
+    "status": "SUBMIT_FAILED",
+    "error": "Creating temporary archive of 86 file(s) totalling 810.9 KiB before compression.\nUploading tarball of [.] to [gs://wprojectl_cloudbuild/source/1758095140.707007-cf96a8b7fddf42b58d72c22b0c6499e6.tgz]\nCreated [https://cloudbuild.googleapis.com/v1/projects/wprojectl/locations/us-central1/builds/10a05592-b61b-419d-b0f0-a2632ae76f68].\nLogs are available at [ https://console.cloud.google.com/cloud-build/builds;region=us-central1/10a05592-b61b-419d-b0f0-a2632ae76f68?project=644485179199 ].\nWaiting for build to complete. Polling interval: 1 second(s).\n\nBUILD FAILURE: Build step failure: build step 2 \"gcr.io/cloud-builders/gcloud\" failed: step exited with non-zero status: 1\nERROR: (gcloud.builds.submit) build 10a05592-b61b-419d-b0f0-a2632ae76f68 completed with status \"FAILURE\"\n"
+  },
+  "build_status": {
+    "status": "NO_BUILD_SUBMITTED"
+  },
+  "bigquery_deployment": {
+    "procedures": [
+      {
+        "name": "update_features_daily",
+        "status": "FAILED",
+        "error": ""
+      },
+      {
+        "name": "update_predictions_hourly",
+        "status": "FAILED",
+        "error": ""
+      }
+    ],
+    "success_count": 0
+  },
+  "overall_status": "CLOUD_DEPLOYMENT_INITIATED",
+  "next_steps": [
+    "等待Cloud Build完成构建",
+    "验证Cloud Run服务状态",
+    "测试BigQuery存储过程",
+    "配置定时任务和监控"
+  ]
+}

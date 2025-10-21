@@ -1,0 +1,169 @@
+{
+  "test_timestamp": 1758087607.830728,
+  "api_documentation_source": "https://docs.aimlapi.com/api-references/model-database",
+  "api_key_valid": true,
+  "total_models_tested": 22,
+  "successful_models": 11,
+  "failed_models": 11,
+  "success_rate": 0.5,
+  "total_cost": 0.44064000000000003,
+  "successful_model_details": [
+    {
+      "model_id": "gpt-4o",
+      "provider": "OpenAI",
+      "description": "GPT-4 Omni",
+      "latency_ms": 1713.3657932281494,
+      "tokens": 1366,
+      "cost": 0.01366
+    },
+    {
+      "model_id": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "description": "GPT-4 Omni Mini",
+      "latency_ms": 1432.366132736206,
+      "tokens": 50,
+      "cost": 0.0005
+    },
+    {
+      "model_id": "o3-mini",
+      "provider": "OpenAI",
+      "description": "O3 Mini",
+      "latency_ms": 1268.9149379730225,
+      "tokens": 531,
+      "cost": 0.0053100000000000005
+    },
+    {
+      "model_id": "gemini-2.5-pro",
+      "provider": "Google",
+      "description": "Gemini 2.5 Pro",
+      "latency_ms": 1864.583969116211,
+      "tokens": 1084,
+      "cost": 0.01084
+    },
+    {
+      "model_id": "gemini-2.5-flash",
+      "provider": "Google",
+      "description": "Gemini 2.5 Flash",
+      "latency_ms": 942.2540664672852,
+      "tokens": 13,
+      "cost": 0.00013000000000000002
+    },
+    {
+      "model_id": "gemini-2.0-flash",
+      "provider": "Google",
+      "description": "Gemini 2.0 Flash",
+      "latency_ms": 1050.3060817718506,
+      "tokens": 16,
+      "cost": 0.00016
+    },
+    {
+      "model_id": "deepseek-chat",
+      "provider": "DeepSeek",
+      "description": "DeepSeek Chat V3.1",
+      "latency_ms": 1879.7791004180908,
+      "tokens": 161,
+      "cost": 0.00161
+    },
+    {
+      "model_id": "deepseek-reasoner",
+      "provider": "DeepSeek",
+      "description": "DeepSeek Reasoner V3.1",
+      "latency_ms": 1670.9749698638916,
+      "tokens": 200,
+      "cost": 0.002
+    },
+    {
+      "model_id": "qwen-max",
+      "provider": "Alibaba",
+      "description": "Qwen Max",
+      "latency_ms": 3353.469133377075,
+      "tokens": 692,
+      "cost": 0.006920000000000001
+    },
+    {
+      "model_id": "qwen-plus",
+      "provider": "Alibaba",
+      "description": "Qwen Plus",
+      "latency_ms": 1642.974853515625,
+      "tokens": 105,
+      "cost": 0.0010500000000000002
+    },
+    {
+      "model_id": "qwen3-235b-a22b-thinking-2507",
+      "provider": "Alibaba",
+      "description": "Qwen3 235B Thinking",
+      "latency_ms": 20755.695104599,
+      "tokens": 39846,
+      "cost": 0.39846000000000004
+    }
+  ],
+  "failed_model_details": [
+    {
+      "model_id": "gpt-5",
+      "provider": "OpenAI",
+      "error": "HTTP 400",
+      "details": "{\"requestId\":\"9eac9a7d-2614-4cc6-b0f5-e686b9a5c1ba\",\"statusCode\":400,\"timestamp\":\"2025-09-17T05:39:3..."
+    },
+    {
+      "model_id": "gpt-5-mini",
+      "provider": "OpenAI",
+      "error": "HTTP 400",
+      "details": "{\"requestId\":\"cd0f0f93-08f7-4570-a8c5-7503eaef492f\",\"statusCode\":400,\"timestamp\":\"2025-09-17T05:39:3..."
+    },
+    {
+      "model_id": "o3",
+      "provider": "OpenAI",
+      "error": "HTTP 400",
+      "details": "{\"requestId\":\"c7a39952-299b-40eb-8357-d5e22426d563\",\"statusCode\":400,\"timestamp\":\"2025-09-17T05:39:3..."
+    },
+    {
+      "model_id": "claude-3-5-sonnet",
+      "provider": "Anthropic",
+      "error": "HTTP 400",
+      "details": "{\"requestId\":\"dca08f44-1026-4b5e-ab40-a996c23cd2b0\",\"statusCode\":400,\"timestamp\":\"2025-09-17T05:39:3..."
+    },
+    {
+      "model_id": "claude-3-5-haiku",
+      "provider": "Anthropic",
+      "error": "HTTP 400",
+      "details": "{\"requestId\":\"e8c695dc-20a4-4229-968e-f463c8de6ca0\",\"statusCode\":400,\"timestamp\":\"2025-09-17T05:39:3..."
+    },
+    {
+      "model_id": "claude-3-7-sonnet",
+      "provider": "Anthropic",
+      "error": "HTTP 400",
+      "details": "{\"requestId\":\"52d72c2b-3ad9-467d-abe7-7c664aba0317\",\"statusCode\":400,\"timestamp\":\"2025-09-17T05:39:3..."
+    },
+    {
+      "model_id": "claude-4-opus",
+      "provider": "Anthropic",
+      "error": "HTTP 400",
+      "details": "{\"requestId\":\"c4be1dfa-947c-42db-87e3-9946ae2bb317\",\"statusCode\":400,\"timestamp\":\"2025-09-17T05:39:3..."
+    },
+    {
+      "model_id": "claude-4-sonnet",
+      "provider": "Anthropic",
+      "error": "HTTP 400",
+      "details": "{\"requestId\":\"8cf81a60-8192-4c5c-841c-9af7521610b8\",\"statusCode\":400,\"timestamp\":\"2025-09-17T05:39:3..."
+    },
+    {
+      "model_id": "claude-4-1-opus",
+      "provider": "Anthropic",
+      "error": "HTTP 400",
+      "details": "{\"requestId\":\"0a9a8a54-1159-46bf-9e0e-4ab37fbc4b58\",\"statusCode\":400,\"timestamp\":\"2025-09-17T05:39:3..."
+    },
+    {
+      "model_id": "grok-4",
+      "provider": "xAI",
+      "error": "HTTP 400",
+      "details": "{\"requestId\":\"e4b46554-82f6-4e2f-a40c-039aff8f1ed3\",\"statusCode\":400,\"timestamp\":\"2025-09-17T05:40:0..."
+    },
+    {
+      "model_id": "grok-3-beta",
+      "provider": "xAI",
+      "error": "HTTP 400",
+      "details": "{\"requestId\":\"8e503347-4f9e-4baa-8684-884217cbf08b\",\"statusCode\":400,\"timestamp\":\"2025-09-17T05:40:0..."
+    }
+  ],
+  "honest_assessment": "基于官方文档的真实测试结果"
+}

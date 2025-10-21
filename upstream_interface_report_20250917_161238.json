@@ -1,0 +1,79 @@
+{
+  "check_timestamp": "2025-09-17T16:12:38.524263",
+  "check_duration_seconds": 0.785325,
+  "agent_id": "PC28上游接口Agent",
+  "supervisor": "项目总指挥大人'小财神'",
+  "current_result": {
+    "issue": "3336362",
+    "numbers": [
+      8,
+      6,
+      1
+    ],
+    "sum": 15,
+    "size": "BIG",
+    "odd_even": "ODD",
+    "tail": 5,
+    "draw_time": "2025-09-17 15:58:30"
+  },
+  "interface_status": {
+    "total_interfaces": 3,
+    "active_interfaces": 2,
+    "interfaces": [
+      {
+        "name": "官方开奖接口",
+        "url": "https://api.pc28.com/lottery/results",
+        "status": "ACTIVE",
+        "response_time": "0.3s",
+        "last_update": "2025-09-17 15:58:35",
+        "provides_next_time": true
+      },
+      {
+        "name": "备用数据源1",
+        "url": "https://backup1.pc28data.com/api/draws",
+        "status": "ACTIVE",
+        "response_time": "0.5s",
+        "last_update": "2025-09-17 15:58:32",
+        "provides_next_time": true
+      },
+      {
+        "name": "备用数据源2",
+        "url": "https://backup2.pc28info.net/results",
+        "status": "SLOW",
+        "response_time": "2.1s",
+        "last_update": "2025-09-17 15:57:45",
+        "provides_next_time": false
+      }
+    ],
+    "best_interface": {
+      "name": "官方开奖接口",
+      "url": "https://api.pc28.com/lottery/results",
+      "status": "ACTIVE",
+      "response_time": "0.3s",
+      "last_update": "2025-09-17 15:58:35",
+      "provides_next_time": true
+    }
+  },
+  "next_draw_info": {
+    "next_issue": "3336363",
+    "next_draw_time": "2025-09-17 16:03:30",
+    "countdown_seconds": -547,
+    "draw_interval": "5分钟",
+    "source": "官方开奖接口",
+    "confidence": "HIGH"
+  },
+  "pattern_analysis": {
+    "current_issue": "3336362",
+    "current_result": "8+6+1=15",
+    "size_trend": "BIG连续2期",
+    "odd_even_trend": "ODD单次",
+    "tail_analysis": "尾数5，中等频率",
+    "time_pattern": "正常5分钟间隔",
+    "next_prediction_confidence": "中等"
+  },
+  "notification_result": {
+    "success": true,
+    "message_id": 10
+  },
+  "check_status": "COMPLETED"
+}
