@@ -1,5 +1,7 @@
 # PC28 Navigator - 独立项目
 
+[![codecov](https://codecov.io/gh/Ww62215764/--/branch/main/graph/badge.svg)](https://codecov.io/gh/Ww62215764/--)
+
 ## 🧭 项目简介
 
 **项目名称**: PC28 Navigator  
@@ -54,4 +56,23 @@ python3 navigator_core.py
 
 **简洁、专注、避免混淆的独立Navigator项目**
 
+## 🧪 运行测试
 
+1. 创建并激活虚拟环境（可选）
+```
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+2. 安装依赖并运行测试
+```
+./scripts/run_tests.sh
+```
+
+3. 可选：启用额外测试
+- TurningPoint 算法测试依赖 `ruptures`，若未安装将自动跳过。
+- MCP 错误用例仅在设置环境变量时运行：
+```
+# 一键运行（自动安装依赖、启动/回收 Mock 服务并运行测试）
+./scripts/run_mcp_tests.sh
+```
