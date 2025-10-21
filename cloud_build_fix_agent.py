@@ -501,7 +501,7 @@ async def main():
     print()
 
     agent = PC28CloudBuildFixAgent()
-    result = await agent.execute_fix_task()
+    await agent.execute_fix_task()
 
     print("\n🎯 Cloud Build修复完成，Agent们100%云端运行！")
 

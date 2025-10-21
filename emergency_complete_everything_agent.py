@@ -750,7 +750,7 @@ async def main():
     print()
 
     agent = PC28EmergencyCompleteEverythingAgent()
-    result = await agent.execute_emergency_completion()
+    await agent.execute_emergency_completion()
 
     print("\n🎯 紧急完成任务完成，所有工作已完成！")
 

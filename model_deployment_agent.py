@@ -374,7 +374,7 @@ async def main():
     print()
 
     agent = PC28ModelDeploymentAgent()
-    result = await agent.execute_deployment_task()
+    await agent.execute_deployment_task()
 
     print("\n🎯 模型部署完成，生产环境性能已提升！")
 

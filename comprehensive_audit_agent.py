@@ -629,7 +629,7 @@ async def main():
     print()
 
     agent = PC28ComprehensiveAuditAgent()
-    result = await agent.execute_comprehensive_audit()
+    await agent.execute_comprehensive_audit()
 
     print("\n🎯 综合审计完成，所有问题已如实汇报！")
 

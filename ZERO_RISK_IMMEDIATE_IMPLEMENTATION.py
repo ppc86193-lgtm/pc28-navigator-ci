@@ -501,7 +501,7 @@ class ZeroRiskImmediateUpgrade:
 async def main():
     """主升级函数"""
     upgrader = ZeroRiskImmediateUpgrade()
-    result = await upgrader.execute_zero_risk_upgrade()
+    await upgrader.execute_zero_risk_upgrade()
 
     print("\n🎯 零风险立刻项升级完成！")
     print("🛡️ PC28系统安全性和治理水平大幅提升！")

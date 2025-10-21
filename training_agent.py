@@ -258,7 +258,7 @@ async def main():
     print()
 
     agent = PC28TrainingAgent()
-    result = await agent.execute_training_task()
+    await agent.execute_training_task()
 
     print("\n🎯 训练Agent任务完成，等待监督者验收！")
 

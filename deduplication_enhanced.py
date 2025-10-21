@@ -333,7 +333,7 @@ class EnhancedDeduplication:
                     ]
                 )
 
-                delete_result = self.bq_client.query(
+                _ = self.bq_client.query(
                     delete_query, delete_config
                 ).result()
                 deleted_count += dup_info["will_delete"]

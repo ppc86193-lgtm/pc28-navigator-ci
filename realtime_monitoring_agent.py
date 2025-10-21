@@ -371,7 +371,7 @@ class PC28RealtimeMonitoringAgent:
                 kpi_result = await self.check_kpi_changes()
 
                 # 记录监控状态
-                monitoring_status = {
+                _monitoring_status = {
                     "loop_count": loop_count,
                     "timestamp": datetime.now().isoformat(),
                     "prediction_check": prediction_result,

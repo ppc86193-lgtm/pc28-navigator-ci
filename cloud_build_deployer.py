@@ -431,7 +431,7 @@ async def main():
     print()
 
     deployer = PC28CloudBuildDeployer()
-    result = await deployer.execute_cloud_deployment()
+    await deployer.execute_cloud_deployment()
 
     print("\n🎯 Cloud Build部署完成，Agent们在云端真正工作！")
 

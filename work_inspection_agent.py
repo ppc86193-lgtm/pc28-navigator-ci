@@ -460,7 +460,7 @@ async def main():
     print()
 
     agent = PC28WorkInspectionAgent()
-    result = await agent.execute_inspection_task()
+    await agent.execute_inspection_task()
 
     print("\n🎯 工作检查完成，Agent们的工作成果已评估！")
 

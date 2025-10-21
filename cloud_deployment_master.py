@@ -342,7 +342,7 @@ async def main():
     print()
 
     master = PC28CloudDeploymentMaster()
-    result = await master.execute_cloud_deployment()
+    await master.execute_cloud_deployment()
 
     print("\n🎯 云端部署完成，Agent们开始真正工作！")
 

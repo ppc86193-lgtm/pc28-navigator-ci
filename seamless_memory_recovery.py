@@ -200,7 +200,7 @@ class SeamlessMemoryRecovery:
         print("=" * 40)
 
         # 1. 创建全面记忆转储
-        memory_data = self.create_comprehensive_memory_dump()
+        _ = self.create_comprehensive_memory_dump()
 
         # 2. 创建快速恢复指南
         self.create_quick_recovery_guide()
@@ -229,7 +229,7 @@ def main():
     print()
 
     recovery_system = SeamlessMemoryRecovery()
-    result = recovery_system.setup_memory_recovery_system()
+    recovery_system.setup_memory_recovery_system()
 
     print("\n🎉 无缝记忆恢复系统已就绪！")
     print("💡 下次重新打开时，让我阅读恢复文件即可快速恢复！")

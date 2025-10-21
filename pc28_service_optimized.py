@@ -695,7 +695,7 @@ async def post_maintenance_recovery():
                 record = api_client._build_bigquery_record(
                     parsed, "post_maintenance_recovery"
                 )
-                saved = api_client.save_to_bigquery([record])
+                _ = api_client.save_to_bigquery([record])
                 logger.info(f"维护后立即拉取: {record['issue']}")
 
         # 2. 检查维护期间的数据缺失 (19:00-19:30)

@@ -223,7 +223,7 @@ async def main():
     client = ResponsesAPIClient()
 
     # 执行PC28生产问题的Pro级分析
-    result = await client.analyze_pc28_production_issue()
+    await client.analyze_pc28_production_issue()
 
     print("\n🏆 Pro级API分析完成！")
     print("🎯 下一步: 基于深度推理结果执行具体修复行动")

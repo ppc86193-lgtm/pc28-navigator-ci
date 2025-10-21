@@ -363,7 +363,7 @@ def main():
     print()
 
     deployer = GoogleCloudAIDeployment()
-    result = deployer.execute_google_deployment_prep()
+    deployer.execute_google_deployment_prep()
 
     print("\n🎉 Google Cloud准备完成，等待AWS账号！")
 

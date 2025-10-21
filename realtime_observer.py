@@ -159,7 +159,7 @@ class PC28RealtimeObserver:
             print(report)
 
             # 保存观察记录
-            observation_record = {
+            _observation_record = {
                 "observation_time": datetime.now().isoformat(),
                 "observation_count": observation_count,
                 "draw_data": draw_data,

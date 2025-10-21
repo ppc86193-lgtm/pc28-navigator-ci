@@ -601,7 +601,7 @@ async def main():
     print()
 
     agent = PC28FinalFixAllAgent()
-    result = await agent.execute_final_fix()
+    await agent.execute_final_fix()
 
     print("\n🎯 最终修复完成，所有问题已解决！")
 

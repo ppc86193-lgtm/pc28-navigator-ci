@@ -427,7 +427,7 @@ async def main():
     print()
 
     agent = PC28ViewTableFixAgent()
-    result = await agent.execute_view_fix_task()
+    await agent.execute_view_fix_task()
 
     print("\n🎯 VIEW表修复完成，视图数据问题已解决！")
 

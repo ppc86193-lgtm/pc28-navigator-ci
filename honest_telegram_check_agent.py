@@ -430,7 +430,7 @@ async def main():
     print()
 
     agent = HonestTelegramCheckAgent()
-    result = await agent.execute_honest_check()
+    await agent.execute_honest_check()
 
     print("\n🎯 诚实检查完成，已如实汇报真实状态！")
 

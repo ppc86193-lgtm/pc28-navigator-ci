@@ -437,7 +437,7 @@ class EnhancedPC28Upstream:
         )
 
         result = self.bq_client.query(query, job_config=job_config).result()
-        existing_issues = {row.issue for row in result}
+        _ = {row.issue for row in result}
 
         # 这里可以根据期号规律检测缺失的期号
         # 简化版本：返回时间段缺失

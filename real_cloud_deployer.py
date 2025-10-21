@@ -254,7 +254,7 @@ asyncio-mqtt>=0.11.0
 
         try:
             # 使用gcloud创建训练作业
-            create_cmd = [
+            _create_cmd = [
                 "gcloud",
                 "ai",
                 "custom-jobs",
@@ -379,7 +379,7 @@ async def main():
     print()
 
     deployer = PC28RealCloudDeployer()
-    result = await deployer.execute_real_deployment()
+    await deployer.execute_real_deployment()
 
     print("\n🎯 真实云端部署完成，Agent们开始真正工作！")
 

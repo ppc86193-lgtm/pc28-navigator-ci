@@ -266,7 +266,7 @@ class ProLevelAPIClient:
 async def main():
     """主测试函数"""
     client = ProLevelAPIClient()
-    result = await client.test_pro_level_capabilities()
+    await client.test_pro_level_capabilities()
 
     print("\n🎯 按照您的专业方案，API能力已大幅提升！")
     print("🚨 但仍需真正部署到云端才能避免本地卡顿！")

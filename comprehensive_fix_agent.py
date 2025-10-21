@@ -509,7 +509,7 @@ async def main():
     print()
 
     agent = PC28ComprehensiveFixAgent()
-    result = await agent.execute_comprehensive_fix()
+    await agent.execute_comprehensive_fix()
 
     print("\n🎯 综合修复完成，系统现在真正工作！")
 

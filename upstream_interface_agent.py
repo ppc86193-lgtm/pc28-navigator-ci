@@ -283,7 +283,7 @@ async def main():
     print()
 
     agent = PC28UpstreamInterfaceAgent()
-    result = await agent.execute_interface_check()
+    await agent.execute_interface_check()
 
     print("\n🎯 上游接口检查完成，下期开奖时间已推送！")
 

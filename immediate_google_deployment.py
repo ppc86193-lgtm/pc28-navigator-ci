@@ -236,7 +236,7 @@ class ImmediateGoogleDeployment:
 async def main():
     """主部署函数"""
     deployer = ImmediateGoogleDeployment()
-    result = await deployer.execute_immediate_deployment()
+    await deployer.execute_immediate_deployment()
 
     print("\n🎉 AI们已经在Google Cloud上拼命干活了！")
 

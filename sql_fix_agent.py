@@ -248,7 +248,7 @@ async def main():
     print()
 
     agent = PC28SQLFixAgent()
-    result = await agent.execute_fix_task()
+    await agent.execute_fix_task()
 
     print("\n🎯 SQL修复Agent任务完成，等待监督者验收！")
 

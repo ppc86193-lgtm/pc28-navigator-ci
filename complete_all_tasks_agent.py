@@ -717,7 +717,7 @@ async def main():
     print()
 
     agent = PC28CompleteAllTasksAgent()
-    result = await agent.execute_complete_all_tasks()
+    await agent.execute_complete_all_tasks()
 
     print("\n🎯 所有未完成工作已完成！")
 
