@@ -43,6 +43,19 @@ PC28_NAVIGATOR_CLEAN/
 - 部署命令统一：`python -m deploy.cli <subcommand>`
   - `prepare` | `cloudbuild` | `cloudbuild-fix` | `real` | `immediate` | `master`
 
+### Agents 统一入口
+- 通过通用 CLI 运行现有 Agent 脚本（无需修改脚本本身）：
+```
+python -m agents.cli run agent_exec          # 调用模块 main()
+python -m agents.cli call agent_exec main    # 指定函数
+```
+
+### 归档
+- 新建 `docs/archive/` 保存历史/演示/冗余配置文件，避免干扰主构建：
+  - `cloudbuild.fixed.yaml`
+  - `Dockerfile.training`, `Dockerfile.cloud`, `Dockerfile.fixed`
+  - 其他演示脚本逐步迁移（详见 `docs/archive/README.md`）
+
 #### 环境变量
 - `GCP_PROJECT`/`GOOGLE_CLOUD_PROJECT`：GCP 项目（默认 `wprojectl`）
 - `GCP_LOCATION`：区域（默认 `us-central1`）

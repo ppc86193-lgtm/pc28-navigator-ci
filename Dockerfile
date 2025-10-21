@@ -1,16 +1,21 @@
-FROM python:3.11-slim
+# syntax=docker/dockerfile:1.7
+
+ARG PYTHON_VERSION=3.12-slim
+FROM python:${PYTHON_VERSION} AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
 
 WORKDIR /app
 
-# 安装依赖
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+COPY requirements.txt ./
+RUN python -m pip install --upgrade pip && \
+    pip install -r requirements.txt
 
-# 复制应用代码
 COPY . .
 
-# 暴露端口
+# Default to running the unified Flask app
 EXPOSE 8080
+CMD ["python", "cloud_app.py"]
 
-# 启动服务
-CMD ["python", "pc28_service_optimized.py"]
