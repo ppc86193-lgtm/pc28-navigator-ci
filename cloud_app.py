@@ -7,6 +7,9 @@ from flask import Flask, jsonify, request
 from google.cloud import bigquery
 
 from app_config import Config
+from infra.bq import get_kpi_today, get_latest_battle, insert_push_log
+from infra.health import basic as health_basic
+from infra.health import deep as health_deep
 
 app = Flask(__name__)
 
@@ -32,61 +35,12 @@ def _json_response(payload: Dict[str, Any], status: int = 200):
 def health():
     mode = request.args.get("mode", "basic")
     if mode != "deep":
-        return _json_response(
-            {
-                "status": "healthy",
-                "service": "PC28真正的监控服务",
-                "timestamp": datetime.now().isoformat(),
-                "revision": "real-cloud-20250918-063639",
-                "evidence": "machine_verified",
-            }
-        )
+        return _json_response(health_basic(service="PC28真正的监控服务"))
 
     # Deep health checks
     try:
-        health_checks = []
-
-        # BigQuery connectivity
-        test_query = "SELECT 1 as test"
-        list(bq_client.query(test_query).result())
-        health_checks.append({"component": "bigquery", "status": "ok"})
-
-        # Heartbeat table recent rows
-        heartbeat_query = f"""
-        SELECT COUNT(*) as count
-        FROM `{CFG.table_heartbeats}`
-        WHERE ts > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 10 MINUTE)
-        """
-        heartbeat_results = list(bq_client.query(heartbeat_query).result())
-        heartbeat_ok = heartbeat_results and heartbeat_results[0].count > 0
-        health_checks.append(
-            {"component": "heartbeat", "status": "ok" if heartbeat_ok else "fail"}
-        )
-
-        # Data freshness
-        freshness_query = f"""
-        SELECT TIMESTAMP_DIFF(CURRENT_TIMESTAMP(), MAX(timestamp), MINUTE) as minutes_ago
-        FROM `{CFG.view_draws}`
-        """
-        freshness_results = list(bq_client.query(freshness_query).result())
-        data_fresh = (
-            freshness_results
-            and freshness_results[0].minutes_ago < CFG.freshness_minutes_ok
-        )
-        health_checks.append(
-            {"component": "data_freshness", "status": "ok" if data_fresh else "stale"}
-        )
-
-        overall = all(c["status"] == "ok" for c in health_checks)
-        return _json_response(
-            {
-                "status": "healthy" if overall else "degraded",
-                "mode": "deep",
-                "checks": health_checks,
-                "timestamp": datetime.now().isoformat(),
-            },
-            200 if overall else 503,
-        )
+        payload, code = health_deep(bq_client, CFG)
+        return _json_response(payload, code)
     except Exception as e:
         logger.exception("Deep health error")
         return _json_response(
@@ -145,38 +99,23 @@ def push_kpi():
     if CFG.disable_push:
         return _json_response({"status": "disabled"}, 403)
     try:
-        kpi_query = """
-        SELECT acc_global, ev_global, coverage_global, traffic_light
-        FROM `{table}`
-        WHERE day_id = CURRENT_DATE('Asia/Shanghai')
-        LIMIT 1
-        """
-        results = list(
-            bq_client.query(kpi_query.format(table=CFG.table_kpi_daily)).result()
-        )
-        if not results:
+        kpi = get_kpi_today(bq_client, CFG)
+        if not kpi:
             return _json_response({"status": "no_data"}, 404)
 
-        row = results[0]
-        log_query = f"""
-        INSERT INTO `{CFG.table_push_logs}`
-        (timestamp, endpoint, message_type, status, message_id)
-        VALUES
-        (CURRENT_TIMESTAMP(), '/push/kpi', 'KPI_REPORT', 'SUCCESS', 'kpi_{datetime.now().strftime("%Y%m%d_%H%M%S")}')
-        """
-        bq_client.query(log_query).result()
+        insert_push_log(
+            bq_client,
+            CFG,
+            endpoint="/push/kpi",
+            message_type="KPI_REPORT",
+            status="SUCCESS",
+            message_id=f"kpi_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+        )
 
         return _json_response(
             {
                 "status": "success",
-                "kpi_data": {
-                    "accuracy": float(row.acc_global) if row.acc_global else 0,
-                    "expected_value": float(row.ev_global) if row.ev_global else 0,
-                    "coverage": (
-                        float(row.coverage_global) if row.coverage_global else 0
-                    ),
-                    "traffic_light": row.traffic_light,
-                },
+                "kpi_data": kpi,
                 "timestamp": datetime.now().isoformat(),
             }
         )
@@ -190,38 +129,23 @@ def push_battle():
     if CFG.disable_push:
         return _json_response({"status": "disabled"}, 403)
     try:
-        battle_query = """
-        SELECT issue, timestamp, a, b, c, (a + b + c) as sum
-        FROM `{table}`
-        ORDER BY timestamp DESC
-        LIMIT 1
-        """
-        results = list(
-            bq_client.query(battle_query.format(table=CFG.view_draws)).result()
-        )
-        if not results:
+        battle = get_latest_battle(bq_client, CFG)
+        if not battle:
             return _json_response({"status": "no_data"}, 404)
 
-        row = results[0]
-        log_query = f"""
-        INSERT INTO `{CFG.table_push_logs}`
-        (timestamp, endpoint, message_type, status, message_id)
-        VALUES
-        (CURRENT_TIMESTAMP(), '/push/battle', 'BATTLE_RESULT', 'SUCCESS', 'battle_{row.issue}')
-        """
-        bq_client.query(log_query).result()
+        insert_push_log(
+            bq_client,
+            CFG,
+            endpoint="/push/battle",
+            message_type="BATTLE_RESULT",
+            status="SUCCESS",
+            message_id=f"battle_{battle['issue']}",
+        )
 
         return _json_response(
             {
                 "status": "success",
-                "battle_data": {
-                    "issue": row.issue,
-                    "timestamp": row.timestamp.isoformat(),
-                    "numbers": [row.a, row.b, row.c],
-                    "sum": row.sum,
-                    "size": "BIG" if row.sum >= 14 else "SMALL",
-                    "odd_even": "ODD" if row.sum % 2 == 1 else "EVEN",
-                },
+                "battle_data": battle,
                 "timestamp": datetime.now().isoformat(),
             }
         )
