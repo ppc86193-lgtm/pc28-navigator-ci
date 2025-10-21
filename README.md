@@ -1,6 +1,6 @@
 # PC28 Navigator - 独立项目
 
-[![codecov](https://codecov.io/gh/Ww62215764/--/branch/main/graph/badge.svg)](https://codecov.io/gh/Ww62215764/--)
+[![codecov](https://codecov.io/gh/ppc86193-lgtm/pc28-navigator-ci/branch/main/graph/badge.svg)](https://codecov.io/gh/ppc86193-lgtm/pc28-navigator-ci)
 
 ## 🧭 项目简介
 
