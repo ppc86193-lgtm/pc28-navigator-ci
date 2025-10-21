@@ -33,6 +33,16 @@ PC28_NAVIGATOR_CLEAN/
     └── deploy.sh            # 部署脚本
 ```
 
+### 服务与部署整合（本仓库）
+- 统一服务入口：`cloud_app.py`
+  - `GET /health?mode=basic|deep`
+  - `GET /heartbeat`
+  - `POST /push/kpi`, `POST /push/battle`
+- 兼容层：`app.py`、`push_endpoints_app.py` 均改为转发 `cloud_app.app`
+- AI 服务统一：使用 `ai_service.py`（FastAPI）；`ai_service_fixed.py`、`ai_service_complete.py` 改为导出 `ai_service.app` 的兼容层
+- 部署命令统一：`python -m deploy.cli <subcommand>`
+  - `prepare` | `cloudbuild` | `cloudbuild-fix` | `real` | `immediate` | `master`
+
 ## 🚀 快速开始
 
 1. **设置环境**
@@ -76,3 +86,7 @@ source .venv/bin/activate
 # 一键运行（自动安装依赖、启动/回收 Mock 服务并运行测试）
 ./scripts/run_mcp_tests.sh
 ```
+
+---
+
+CI: 已启用 `ruff + black + isort + pytest`，以及所有 Dockerfile 的构建校验。
