@@ -43,6 +43,16 @@ PC28_NAVIGATOR_CLEAN/
 - 部署命令统一：`python -m deploy.cli <subcommand>`
   - `prepare` | `cloudbuild` | `cloudbuild-fix` | `real` | `immediate` | `master`
 
+#### 环境变量
+- `GCP_PROJECT`/`GOOGLE_CLOUD_PROJECT`：GCP 项目（默认 `wprojectl`）
+- `GCP_LOCATION`：区域（默认 `us-central1`）
+- `HEARTBEAT_TABLE`：心跳表（默认 `wprojectl.pc28_monitor.heartbeats`）
+- `DRAWS_VIEW`：开奖视图（默认 `wprojectl.pc28.draws_14w_dedup_v`）
+- `KPI_TABLE`：KPI 表（默认 `wprojectl.pc28.kpi_daily_base`）
+- `PUSH_LOGS_TABLE`：推送日志表（默认 `wprojectl.pc28_monitor.push_logs`）
+- `FRESHNESS_MINUTES_OK`：数据新鲜阈值（默认 `60`）
+- `DISABLE_PUSH`：为 `1` 时禁用 `/push/*` 端点
+
 ## 🚀 快速开始
 
 1. **设置环境**
