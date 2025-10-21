@@ -13,6 +13,8 @@ from typing import Dict, Any, List
 from datetime import datetime
 from dataclasses import dataclass
 
+from production_system import PredictorBridge
+
 # 项目信息
 PROJECT = "PC28 Navigator"
 VERSION = "1.0.0"
@@ -153,6 +155,7 @@ class NavigatorCore:
         self.config = NavigatorConfig()
         self.upstream_monitor = UpstreamMonitor(self.config)
         self.signal_diagnostic = SignalDiagnostic(self.config)
+        self.predictor_bridge = PredictorBridge(self.config)
         
         logger.info(f"{PROJECT} v{VERSION} 初始化完成")
         logger.info(f"目标: {PURPOSE}")
@@ -167,11 +170,15 @@ class NavigatorCore:
         # 诊断信号失败
         signal_diagnosis = await self.signal_diagnostic.diagnose_signal_failure()
         
+        # 预测趋势快照（当数据可用时）
+        prediction_snapshot = await self.predictor_bridge.generate_snapshot()
+
         # 综合分析
         diagnosis_result = {
             "diagnosis_time": datetime.now().isoformat(),
             "upstream_health": upstream_health,
             "signal_diagnosis": signal_diagnosis,
+            "prediction_snapshot": prediction_snapshot,
             "recommendations": self._generate_recommendations(upstream_health, signal_diagnosis)
         }
         
@@ -215,7 +222,42 @@ class NavigatorCore:
             print(f"\n🔍 信号诊断:")
             signal = diagnosis['signal_diagnosis']
             print(f"   根因: {signal['root_cause']}")
-            
+
+            prediction = diagnosis.get("prediction_snapshot", {})
+            print(f"\n📊 预测趋势:")
+            if prediction.get("status") == "ok":
+                print(f"   样本量: {prediction['sample_size']}")
+                bands = prediction.get("bands", [])
+                if bands:
+                    latest = bands[0]
+                    print(
+                        "   最新窗口({label}): 大 {big:.1%} / 小 {small:.1%} | 单 {odd:.1%} / 双 {even:.1%}".format(
+                            label=latest["label"],
+                            big=latest["big_probability"],
+                            small=latest["small_probability"],
+                            odd=latest["odd_probability"],
+                            even=latest["even_probability"],
+                        )
+                    )
+                momentum = prediction.get("momentum", {})
+                print(
+                    "   动量偏移: 大小 {bs:.1%} / 单双 {oe:.1%}".format(
+                        bs=abs(momentum.get("big_small_shift", 0.0)),
+                        oe=abs(momentum.get("odd_even_shift", 0.0)),
+                    )
+                )
+                print(
+                    f"   预测置信度: {prediction.get('predictive_score', 0.0):.1%}"
+                )
+
+                if prediction.get("alerts"):
+                    print("\n⚠️ 风险提示:")
+                    for alert in prediction["alerts"]:
+                        print(f"   - {alert}")
+            else:
+                reason = prediction.get("reason", "未提供数据")
+                print(f"   暂不可用（{reason}）")
+
             print(f"\n💡 修复建议:")
             for i, rec in enumerate(diagnosis['recommendations'], 1):
                 print(f"   {i}. {rec}")
