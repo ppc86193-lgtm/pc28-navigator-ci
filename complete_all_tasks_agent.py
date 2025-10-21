@@ -11,6 +11,9 @@ from datetime import datetime
 import aiohttp
 from google.cloud import bigquery
 
+from app_config import Config
+from infra.bq import insert_push_log
+
 
 class PC28CompleteAllTasksAgent:
     """PC28完成所有任务Agent"""
@@ -476,16 +479,15 @@ if __name__ == '__main__':
 
             print(f"   ✅ 推送日志表已创建: {self.project_id}.pc28_monitor.push_logs")
 
-            # 插入测试日志
-            test_log_query = f"""
-            INSERT INTO `{self.project_id}.pc28_monitor.push_logs`
-            (timestamp, endpoint, message_type, status, message_id, response_time_ms)
-            VALUES
-            (CURRENT_TIMESTAMP(), '/push/test', 'TEST_MESSAGE', 'SUCCESS', 'test_{datetime.now().strftime("%Y%m%d_%H%M%S")}', 150)
-            """
-
-            job = self.bq_client.query(test_log_query)
-            job.result()
+            # 插入测试日志（使用通用方法）
+            insert_push_log(
+                self.bq_client,
+                Config(),
+                endpoint="/push/test",
+                message_type="TEST_MESSAGE",
+                status="SUCCESS",
+                message_id=f"test_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            )
 
             print("   ✅ 测试日志已插入")
 

@@ -7,6 +7,8 @@ from fastapi import FastAPI, HTTPException
 from google.cloud import secretmanager
 from pydantic import BaseModel
 
+from infra.health import basic as health_basic
+
 app = FastAPI(title="PC28 Navigator AI Service")
 
 
@@ -65,7 +67,7 @@ async def analyze(request: AIRequest):
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "service": "PC28 Navigator AI"}
+    return health_basic(service="PC28 Navigator AI")
 
 
 if __name__ == "__main__":
