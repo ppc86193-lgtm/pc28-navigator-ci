@@ -21,7 +21,7 @@ class RealTimeMonitor:
                 async with session.post(url, json=payload) as response:
                     result = await response.json()
                     return result.get("ok", False)
-            except:
+            except Exception:
                 return False
 
     async def check_new_draws(self):
