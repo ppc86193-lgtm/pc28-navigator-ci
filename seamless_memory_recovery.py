@@ -5,115 +5,105 @@
 """
 
 import json
-import os
 from datetime import datetime
-from typing import Dict, Any
+
 
 class SeamlessMemoryRecovery:
     """无缝记忆恢复系统"""
-    
+
     def __init__(self):
         self.memory_file = "PC28_NAVIGATOR_MEMORY.json"
         self.context_file = "PC28_CURRENT_CONTEXT.md"
         self.quick_recovery_file = "PC28_QUICK_RECOVERY.md"
-        
+
         print("🧠 无缝记忆恢复系统")
         print("🎯 让Cursor AI无缝恢复所有记忆")
-    
+
     def create_comprehensive_memory_dump(self):
         """创建全面的记忆转储"""
-        print(f"\n💾 创建全面记忆转储...")
-        
+        print("\n💾 创建全面记忆转储...")
+
         # 收集所有重要信息
         comprehensive_memory = {
             "project_identity": {
                 "name": "PC28 Navigator",
                 "purpose": "13个Agent + 1人工位的智能航管塔系统",
                 "supervisor": "项目总指挥大人",
-                "ai_assistant": "Cursor内置Claude Sonnet 4"
+                "ai_assistant": "Cursor内置Claude Sonnet 4",
             },
-            
             "critical_discoveries": {
                 "production_issues": {
                     "signal_generation_stopped": "信号生成停摆5天",
                     "candidates_table_null": "candidates_today_dedup_v全部字段NULL",
                     "p_star_anomaly": "所有p_star_ens显示0.75，过于一致",
                     "vertex_ai_stalled": "Vertex AI预测停滞9小时",
-                    "root_cause": "BigQuery视图字段名错误和数据流中断"
+                    "root_cause": "BigQuery视图字段名错误和数据流中断",
                 },
-                
                 "model_analysis": {
                     "vertex_ai_models": "10个专业模型存在但预测中断",
                     "model_accuracy": "51.49%，刚好在生存线51.28%边缘",
                     "model_quality": "边际盈利模型，不是差模型",
-                    "threshold_issue": "0.78阈值过高导致0%覆盖率"
+                    "threshold_issue": "0.78阈值过高导致0%覆盖率",
                 },
-                
                 "ai_resources": {
                     "aiml_api_models": "262个模型可用",
                     "working_models": "14个已验证可用",
                     "api_key": "9030c9fcbc474c258dca7ff39b3a20e6",
-                    "cost": "$50/月不限量调用"
+                    "cost": "$50/月不限量调用",
                 },
-                
                 "cloud_resources": {
                     "google_cloud": "$300×20账号=$6000",
                     "microsoft_azure": "几百美金×几个账号",
                     "amazon_aws": "几个体验账号",
-                    "total_value": "$8000+云资源"
-                }
+                    "total_value": "$8000+云资源",
+                },
             },
-            
             "technical_findings": {
                 "gtp_txt_analysis": {
                     "file_size": "10,827行完整实现",
                     "contains": "PI控制器+AutoSwitch+三桶投票+校准系统",
                     "fix_script": "第1432行PERF_ATTAIN修复脚本",
-                    "self_adaptive": "完整的自适应交易系统"
+                    "self_adaptive": "完整的自适应交易系统",
                 },
-                
                 "verification_checklist": {
                     "source": "999.txt验收清单",
                     "total_items": "多项验收标准",
                     "passed": "A1/A2/A3/B1/B3/D1",
                     "failed": "B2/C2/C3/F1",
-                    "status": "部分通过"
+                    "status": "部分通过",
                 },
-                
                 "current_fixes": {
                     "candidates_view_fixed": "已修复BigQuery视图语法",
                     "signal_generation_restored": "信号生成已恢复",
                     "coverage_improved": "从0%提升到有信号",
-                    "needs_verification": "需要验证数据真实性"
-                }
+                    "needs_verification": "需要验证数据真实性",
+                },
             },
-            
             "system_architecture": {
                 "multi_agent_design": "13个Agent + 1人工位",
                 "time_constitution": "五种时间严格分离",
                 "tdr_mechanism": "触发-处置-恢复机制",
-                "three_powers_separation": "量化/AI/人工职责分离"
+                "three_powers_separation": "量化/AI/人工职责分离",
             },
-            
             "immediate_priorities": {
                 "fix_production": "恢复PC28生产环境正常运行",
                 "verify_data_authenticity": "验证修复后数据的真实性",
                 "deploy_to_cloud": "真正部署到云端避免本地卡顿",
-                "implement_monitoring": "建立24/7智能监控"
-            }
+                "implement_monitoring": "建立24/7智能监控",
+            },
         }
-        
+
         # 保存全面记忆
-        with open(self.memory_file, 'w', encoding='utf-8') as f:
+        with open(self.memory_file, "w", encoding="utf-8") as f:
             json.dump(comprehensive_memory, f, indent=2, ensure_ascii=False)
-        
+
         print(f"   ✅ 全面记忆已保存: {self.memory_file}")
         return comprehensive_memory
-    
+
     def create_quick_recovery_guide(self):
         """创建快速恢复指南"""
-        print(f"\n📋 创建快速恢复指南...")
-        
+        print("\n📋 创建快速恢复指南...")
+
         recovery_guide = f"""# PC28 Navigator 快速记忆恢复指南
 
 ## 🧠 给Cursor AI的记忆恢复
@@ -157,16 +147,16 @@ class SeamlessMemoryRecovery:
 ---
 **阅读此文件即可快速恢复所有项目记忆和上下文！**
 """
-        
-        with open(self.quick_recovery_file, 'w', encoding='utf-8') as f:
+
+        with open(self.quick_recovery_file, "w", encoding="utf-8") as f:
             f.write(recovery_guide)
-        
+
         print(f"   ✅ 快速恢复指南已创建: {self.quick_recovery_file}")
-    
+
     def create_current_context_summary(self):
         """创建当前上下文摘要"""
-        print(f"\n📄 创建当前上下文摘要...")
-        
+        print("\n📄 创建当前上下文摘要...")
+
         context_summary = f"""# PC28 Navigator 当前上下文
 
 ## 📊 会话状态 ({datetime.now().isoformat()})
@@ -198,50 +188,52 @@ class SeamlessMemoryRecovery:
 ---
 **此文件帮助快速了解当前进展和下一步行动**
 """
-        
-        with open(self.context_file, 'w', encoding='utf-8') as f:
+
+        with open(self.context_file, "w", encoding="utf-8") as f:
             f.write(context_summary)
-        
+
         print(f"   ✅ 当前上下文摘要已创建: {self.context_file}")
-    
+
     def setup_memory_recovery_system(self):
         """设置记忆恢复系统"""
         print("🧠 设置无缝记忆恢复系统")
         print("=" * 40)
-        
+
         # 1. 创建全面记忆转储
         memory_data = self.create_comprehensive_memory_dump()
-        
+
         # 2. 创建快速恢复指南
         self.create_quick_recovery_guide()
-        
+
         # 3. 创建当前上下文摘要
         self.create_current_context_summary()
-        
-        print(f"\n✅ 记忆恢复系统设置完成！")
-        print(f"\n📋 使用方法:")
+
+        print("\n✅ 记忆恢复系统设置完成！")
+        print("\n📋 使用方法:")
         print(f"   1. 重新打开Cursor时，先阅读: {self.quick_recovery_file}")
         print(f"   2. 查看详细记忆: {self.memory_file}")
         print(f"   3. 了解当前状态: {self.context_file}")
-        print(f"\n🎯 这样您就可以让我快速恢复所有记忆和上下文！")
-        
+        print("\n🎯 这样您就可以让我快速恢复所有记忆和上下文！")
+
         return {
             "memory_file": self.memory_file,
             "recovery_guide": self.quick_recovery_file,
-            "context_summary": self.context_file
+            "context_summary": self.context_file,
         }
+
 
 def main():
     """主函数"""
     print("🧠 PC28 Navigator 无缝记忆恢复系统")
     print("🎯 解决Cursor AI记忆重置问题")
     print()
-    
+
     recovery_system = SeamlessMemoryRecovery()
     result = recovery_system.setup_memory_recovery_system()
-    
-    print(f"\n🎉 无缝记忆恢复系统已就绪！")
-    print(f"💡 下次重新打开时，让我阅读恢复文件即可快速恢复！")
+
+    print("\n🎉 无缝记忆恢复系统已就绪！")
+    print("💡 下次重新打开时，让我阅读恢复文件即可快速恢复！")
+
 
 if __name__ == "__main__":
     main()

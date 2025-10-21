@@ -5,20 +5,24 @@ PC28 Telegram 实时推送修复版本
 解决时间显示和数据获取问题
 """
 
-import subprocess
 import json
-import requests
-import time
-from datetime import datetime, timezone, timedelta
 import logging
+import subprocess
+import time
+from datetime import datetime, timedelta, timezone
+
+import requests
 
 # 配置
 BOT_TOKEN = "8094025881:AAF-7fv6djS0Z8QcgHwHloGSVguXj8XXEC0"
 CHAT_ID = "8420412156"
 
 # 配置日志
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
+
 
 class PC28TelegramPusher:
     def __init__(self):
@@ -30,11 +34,7 @@ class PC28TelegramPusher:
         """发送消息到Telegram"""
         try:
             url = f"{self.base_url}/sendMessage"
-            data = {
-                "chat_id": self.chat_id,
-                "text": text,
-                "parse_mode": parse_mode
-            }
+            data = {"chat_id": self.chat_id, "text": text, "parse_mode": parse_mode}
 
             response = requests.post(url, data=data, timeout=10)
             response.raise_for_status()
@@ -61,7 +61,14 @@ class PC28TelegramPusher:
             LIMIT 1
             """
 
-            cmd = ['bq', 'query', '--use_legacy_sql=false', '--format=json', '--quiet', query]
+            cmd = [
+                "bq",
+                "query",
+                "--use_legacy_sql=false",
+                "--format=json",
+                "--quiet",
+                query,
+            ]
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
 
             if result.stdout.strip():
@@ -69,7 +76,9 @@ class PC28TelegramPusher:
                 if data:
                     draw = data[0]
                     # 手动添加当前时间作为显示时间
-                    draw['display_time'] = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S")
+                    draw["display_time"] = datetime.now(
+                        timezone(timedelta(hours=8))
+                    ).strftime("%Y-%m-%d %H:%M:%S")
                     return draw
 
             return None
@@ -91,7 +100,14 @@ class PC28TelegramPusher:
             WHERE DATE(prediction_timestamp, 'Asia/Shanghai') = CURRENT_DATE('Asia/Shanghai')
             """
 
-            cmd = ['bq', 'query', '--use_legacy_sql=false', '--format=json', '--quiet', query]
+            cmd = [
+                "bq",
+                "query",
+                "--use_legacy_sql=false",
+                "--format=json",
+                "--quiet",
+                query,
+            ]
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
 
             if result.stdout.strip():
@@ -135,7 +151,14 @@ class PC28TelegramPusher:
             ORDER BY accuracy_rate DESC
             """
 
-            cmd = ['bq', 'query', '--use_legacy_sql=false', '--format=json', '--quiet', query]
+            cmd = [
+                "bq",
+                "query",
+                "--use_legacy_sql=false",
+                "--format=json",
+                "--quiet",
+                query,
+            ]
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
 
             if result.stdout.strip():
@@ -156,12 +179,12 @@ class PC28TelegramPusher:
         current_time = datetime.now(timezone(timedelta(hours=8))).strftime("%H:%M:%S")
 
         # 预测状态图标
-        size_icon = "🔴" if draw_data.get('size') == 'large' else "🟢"
-        oddeven_icon = "🔸" if draw_data.get('odd_even') == 'odd' else "🔹"
+        size_icon = "🔴" if draw_data.get("size") == "large" else "🟢"
+        oddeven_icon = "🔸" if draw_data.get("odd_even") == "odd" else "🔹"
 
         # 转换显示名称
-        size_cn = "大" if draw_data.get('size') == 'large' else "小"
-        oddeven_cn = "奇" if draw_data.get('odd_even') == 'odd' else "偶"
+        size_cn = "大" if draw_data.get("size") == "large" else "小"
+        oddeven_cn = "奇" if draw_data.get("odd_even") == "odd" else "偶"
 
         message = f"""🎯 *PC28开奖结果* #{draw_data.get('issue', '')}
 
@@ -184,10 +207,10 @@ class PC28TelegramPusher:
 
         current_time = datetime.now(timezone(timedelta(hours=8))).strftime("%H:%M:%S")
 
-        total_preds = status_data.get('total_predictions', 0)
-        active_models = status_data.get('active_models', 0)
-        last_pred_time = status_data.get('latest_prediction_time', '未知')
-        minutes_ago = status_data.get('minutes_since_last_prediction', 0)
+        total_preds = status_data.get("total_predictions", 0)
+        active_models = status_data.get("active_models", 0)
+        last_pred_time = status_data.get("latest_prediction_time", "未知")
+        minutes_ago = status_data.get("minutes_since_last_prediction", 0)
 
         # 根据预测更新时间判断状态
         minutes_ago = int(minutes_ago) if minutes_ago else 9999
@@ -213,7 +236,7 @@ class PC28TelegramPusher:
 • 距离上次更新: `{minutes_ago}分钟`
 
 ━━━━━━━━━━━━━━━━━
-{f"⚠️ 预测系统超过2小时未更新，请检查" if minutes_ago > 120 else "✅ 预测系统运行正常"}"""
+{"⚠️ 预测系统超过2小时未更新，请检查" if minutes_ago > 120 else "✅ 预测系统运行正常"}"""
 
         return message
 
@@ -232,10 +255,10 @@ class PC28TelegramPusher:
 """
 
         for i, model in enumerate(performance_data[:5], 1):
-            model_id = model.get('model_id', 'unknown')
-            total_preds = int(model.get('total_predictions', 0))
-            correct_preds = int(model.get('correct_predictions', 0))
-            accuracy = float(model.get('accuracy_rate', 0))
+            model_id = model.get("model_id", "unknown")
+            total_preds = int(model.get("total_predictions", 0))
+            correct_preds = int(model.get("correct_predictions", 0))
+            accuracy = float(model.get("accuracy_rate", 0))
 
             # 根据准确率设置图标
             if accuracy >= 0.65:
@@ -249,7 +272,7 @@ class PC28TelegramPusher:
 
             message += f"{perf_icon} *{model_id}*: {accuracy:.1%} ({correct_preds}/{total_preds})\n"
 
-        message += f"""
+        message += """
 ━━━━━━━━━━━━━━━━━
 📈 基于今日实际开奖结果统计"""
 
@@ -307,6 +330,7 @@ class PC28TelegramPusher:
 
         return success_count >= 2  # 至少2个成功就算成功
 
+
 def main():
     pusher = PC28TelegramPusher()
 
@@ -357,6 +381,7 @@ def main():
         print("\n👋 用户中断操作")
     except Exception as e:
         print(f"❌ 程序异常: {e}")
+
 
 if __name__ == "__main__":
     main()

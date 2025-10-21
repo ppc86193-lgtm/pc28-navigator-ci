@@ -66,14 +66,14 @@ import requests
 
 def lambda_handler(event, context):
     """AWS Lambda AI服务处理器"""
-    
+
     # 解析请求
     task = event.get('task')
     model = event.get('model', 'claude-3.5-sonnet')
-    
+
     # 调用AWS Bedrock
     bedrock = boto3.client('bedrock-runtime')
-    
+
     response = bedrock.invoke_model(
         modelId=model,
         body=json.dumps({
@@ -82,7 +82,7 @@ def lambda_handler(event, context):
             "temperature": 0.1
         })
     )
-    
+
     # 返回结果给Cursor
     return {
         'statusCode': 200,
@@ -102,14 +102,14 @@ Resources:
     Properties:
       Name: PC28-Navigator-API
       Description: PC28 Navigator AI服务API
-      
+
   AIAnalysisResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref PC28NavigatorAPI
       ParentId: !GetAtt PC28NavigatorAPI.RootResourceId
       PathPart: analyze
-      
+
   AIAnalysisMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -130,31 +130,31 @@ import json
 
 class CursorAWSClient:
     """Cursor到AWS的AI服务客户端"""
-    
+
     def __init__(self, aws_api_endpoint):
         self.aws_api_endpoint = aws_api_endpoint
-    
+
     def analyze_with_aws_ai(self, task, model="claude-3.5-sonnet"):
         """通过AWS调用AI分析"""
-        
+
         payload = {
             "task": task,
             "model": model,
             "source": "cursor_client"
         }
-        
+
         try:
             response = requests.post(
                 f"{self.aws_api_endpoint}/analyze",
                 json=payload,
                 timeout=60
             )
-            
+
             if response.status_code == 200:
                 return response.json()
             else:
                 return {"error": f"HTTP {response.status_code}"}
-                
+
         except Exception as e:
             return {"error": str(e)}
 

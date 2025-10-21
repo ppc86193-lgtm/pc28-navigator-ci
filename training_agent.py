@@ -5,32 +5,35 @@ PC28训练Agent
 """
 
 import asyncio
-import aiohttp
 import json
 import os
 from datetime import datetime
+
 from google.cloud import bigquery
+
 
 class PC28TrainingAgent:
     """PC28训练Agent"""
-    
+
     def __init__(self):
-        self.api_key = os.getenv('AIML_API_KEY', '9030c9fcbc474c258dca7ff39b3a20e6')
+        self.api_key = os.getenv("AIML_API_KEY", "9030c9fcbc474c258dca7ff39b3a20e6")
         self.project_id = "wprojectl"
         self.location = "us-central1"
-        self.bq_client = bigquery.Client(project=self.project_id, location=self.location)
-        
+        self.bq_client = bigquery.Client(
+            project=self.project_id, location=self.location
+        )
+
         print("🤖 PC28训练Agent启动")
         print("👑 监督者: 项目总指挥大人")
         print("🎯 任务: 执行模型训练")
-    
+
     async def prepare_training_data(self):
         """准备训练数据"""
-        print(f"\n📊 第1步: 准备训练数据...")
-        
+        print("\n📊 第1步: 准备训练数据...")
+
         # 获取最新的训练数据
         training_data_query = """WITH recent_data AS (
-          SELECT 
+          SELECT
             d.issue,
             d.timestamp,
             d.a, d.b, d.c,
@@ -46,7 +49,7 @@ class PC28TrainingAgent:
           WHERE DATE(d.timestamp, 'Asia/Shanghai') >= DATE_SUB(CURRENT_DATE('Asia/Shanghai'), INTERVAL 30 DAY)
           ORDER BY d.timestamp
         )
-        SELECT 
+        SELECT
           issue,
           a, b, c,
           sum,
@@ -60,50 +63,60 @@ class PC28TrainingAgent:
         WHERE prev_sum IS NOT NULL AND next_size IS NOT NULL
         ORDER BY timestamp DESC
         LIMIT 1000"""
-        
+
         try:
             results = list(self.bq_client.query(training_data_query).result())
-            
+
             training_data = []
             for row in results:
-                training_data.append({
-                    "issue": row.issue,
-                    "a": row.a,
-                    "b": row.b, 
-                    "c": row.c,
-                    "sum": row.sum,
-                    "tail": row.tail,
-                    "size": row.size,
-                    "odd_even": row.odd_even,
-                    "prev_sum": row.prev_sum,
-                    "prev_size": row.prev_size,
-                    "next_size": row.next_size  # 训练目标
-                })
-            
-            print(f"   ✅ 训练数据准备完成")
+                training_data.append(
+                    {
+                        "issue": row.issue,
+                        "a": row.a,
+                        "b": row.b,
+                        "c": row.c,
+                        "sum": row.sum,
+                        "tail": row.tail,
+                        "size": row.size,
+                        "odd_even": row.odd_even,
+                        "prev_sum": row.prev_sum,
+                        "prev_size": row.prev_size,
+                        "next_size": row.next_size,  # 训练目标
+                    }
+                )
+
+            print("   ✅ 训练数据准备完成")
             print(f"   📊 数据样本: {len(training_data)}条")
-            print(f"   🎯 训练目标: 预测next_size")
-            print(f"   📅 数据范围: 最近30天")
-            
+            print("   🎯 训练目标: 预测next_size")
+            print("   📅 数据范围: 最近30天")
+
             return {
                 "success": True,
                 "data_count": len(training_data),
                 "data_range": "最近30天",
                 "target": "next_size",
-                "features": ["issue", "a", "b", "c", "sum", "tail", "size", "odd_even", "prev_sum", "prev_size"]
+                "features": [
+                    "issue",
+                    "a",
+                    "b",
+                    "c",
+                    "sum",
+                    "tail",
+                    "size",
+                    "odd_even",
+                    "prev_sum",
+                    "prev_size",
+                ],
             }
-            
+
         except Exception as e:
             print(f"   ❌ 训练数据准备失败: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
-    
+            return {"success": False, "error": str(e)}
+
     async def configure_training_parameters(self):
         """配置训练参数"""
-        print(f"\n⚙️ 第2步: 配置训练参数...")
-        
+        print("\n⚙️ 第2步: 配置训练参数...")
+
         training_config = {
             "model_type": "AutoML Tabular",
             "prediction_type": "classification",
@@ -112,23 +125,23 @@ class PC28TrainingAgent:
             "training_budget": "1000 milli-node-hours",
             "features": {
                 "numeric": ["a", "b", "c", "sum", "tail", "prev_sum"],
-                "categorical": ["size", "odd_even", "prev_size"]
+                "categorical": ["size", "odd_even", "prev_size"],
             },
             "validation_split": 0.2,
-            "test_split": 0.1
+            "test_split": 0.1,
         }
-        
+
         print(f"   🎯 模型类型: {training_config['model_type']}")
         print(f"   📊 预测类型: {training_config['prediction_type']}")
         print(f"   🎪 目标列: {training_config['target_column']}")
         print(f"   💰 训练预算: {training_config['training_budget']}")
-        
+
         return training_config
-    
+
     async def start_vertex_ai_training(self):
         """启动Vertex AI训练"""
-        print(f"\n🚀 第3步: 启动Vertex AI训练作业...")
-        
+        print("\n🚀 第3步: 启动Vertex AI训练作业...")
+
         # 模拟训练作业启动
         training_job = {
             "job_name": f"pc28-model-retrain-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
@@ -136,35 +149,29 @@ class PC28TrainingAgent:
             "training_data_uri": "gs://wprojectl-ml-data/training_data_latest.csv",
             "model_output_uri": "gs://wprojectl-ml-data/model_output/",
             "status": "TRAINING_STARTED",
-            "estimated_duration": "30-60分钟"
+            "estimated_duration": "30-60分钟",
         }
-        
+
         print(f"   🏷️ 作业名称: {training_job['job_name']}")
         print(f"   📊 训练数据: {training_job['training_data_uri']}")
         print(f"   📁 输出路径: {training_job['model_output_uri']}")
         print(f"   ⏱️ 预计时长: {training_job['estimated_duration']}")
         print(f"   🔄 状态: {training_job['status']}")
-        
+
         return training_job
-    
+
     async def monitor_training_progress(self):
         """监控训练进度"""
-        print(f"\n📊 第4步: 监控训练进度...")
-        
+        print("\n📊 第4步: 监控训练进度...")
+
         # 模拟训练进度监控
-        progress_stages = [
-            "数据预处理",
-            "特征工程", 
-            "模型训练",
-            "模型验证",
-            "性能评估"
-        ]
-        
+        progress_stages = ["数据预处理", "特征工程", "模型训练", "模型验证", "性能评估"]
+
         for i, stage in enumerate(progress_stages, 1):
             print(f"   {i}. {stage}...")
             await asyncio.sleep(1)  # 模拟训练时间
-            print(f"      ✅ 完成")
-        
+            print("      ✅ 完成")
+
         # 模拟训练结果
         training_results = {
             "training_status": "COMPLETED",
@@ -172,16 +179,16 @@ class PC28TrainingAgent:
             "validation_accuracy": 0.554,
             "test_accuracy": 0.561,
             "training_duration": "45分钟",
-            "model_improvement": "准确率从51.49%提升到56.7%"
+            "model_improvement": "准确率从51.49%提升到56.7%",
         }
-        
-        print(f"\n   🏆 训练完成！")
+
+        print("\n   🏆 训练完成！")
         print(f"   📈 模型准确率: {training_results['model_accuracy']:.1%}")
         print(f"   📊 验证准确率: {training_results['validation_accuracy']:.1%}")
         print(f"   🎯 性能提升: {training_results['model_improvement']}")
-        
+
         return training_results
-    
+
     async def execute_training_task(self):
         """执行完整训练任务"""
         print("🤖 PC28训练Agent执行训练任务")
@@ -189,28 +196,28 @@ class PC28TrainingAgent:
         print("👑 监督者: 项目总指挥大人")
         print("🎯 任务: 重新训练PC28模型")
         print()
-        
+
         training_start = datetime.now()
-        
+
         # 1. 准备训练数据
         data_result = await self.prepare_training_data()
-        
+
         if not data_result["success"]:
-            print(f"❌ 训练数据准备失败，无法继续训练")
+            print("❌ 训练数据准备失败，无法继续训练")
             return data_result
-        
+
         # 2. 配置训练参数
         config_result = await self.configure_training_parameters()
-        
+
         # 3. 启动训练
         job_result = await self.start_vertex_ai_training()
-        
+
         # 4. 监控进度
         progress_result = await self.monitor_training_progress()
-        
+
         training_end = datetime.now()
         training_duration = (training_end - training_start).total_seconds()
-        
+
         # 生成训练报告
         training_report = {
             "training_timestamp": training_end.isoformat(),
@@ -223,36 +230,38 @@ class PC28TrainingAgent:
             "training_results": progress_result,
             "overall_status": "TRAINING_COMPLETED",
             "model_improvement": "准确率从51.49%提升到56.7%",
-            "next_deployment": "新模型准备部署"
+            "next_deployment": "新模型准备部署",
         }
-        
+
         # 保存训练报告
         report_file = f"training_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        with open(report_file, 'w', encoding='utf-8') as f:
+        with open(report_file, "w", encoding="utf-8") as f:
             json.dump(training_report, f, indent=2, ensure_ascii=False)
-        
-        print(f"\n🏆 训练Agent任务完成！")
+
+        print("\n🏆 训练Agent任务完成！")
         print(f"   训练时长: {training_duration:.1f}秒")
-        print(f"   模型性能: 准确率提升到56.7%")
+        print("   模型性能: 准确率提升到56.7%")
         print(f"   📄 训练报告: {report_file}")
-        
-        print(f"\n👑 向项目总指挥大人汇报:")
-        print(f"   ✅ 模型训练已完成！")
-        print(f"   📈 性能显著提升！")
-        print(f"   🚀 新模型准备部署！")
-        
+
+        print("\n👑 向项目总指挥大人汇报:")
+        print("   ✅ 模型训练已完成！")
+        print("   📈 性能显著提升！")
+        print("   🚀 新模型准备部署！")
+
         return training_report
+
 
 async def main():
     """主训练函数"""
     print("🤖 PC28模型训练")
     print("👑 监督者指令: 开始训练")
     print()
-    
+
     agent = PC28TrainingAgent()
     result = await agent.execute_training_task()
-    
-    print(f"\n🎯 训练Agent任务完成，等待监督者验收！")
+
+    print("\n🎯 训练Agent任务完成，等待监督者验收！")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

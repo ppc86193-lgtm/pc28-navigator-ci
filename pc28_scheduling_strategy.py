@@ -8,21 +8,22 @@ PC28 数据拉取调度策略
 - 每日约280期开奖
 """
 
-from datetime import datetime, timedelta, time
 import asyncio
 import logging
+from datetime import datetime, time, timedelta
 
 logger = logging.getLogger(__name__)
+
 
 class PC28SchedulingStrategy:
     """PC28 最优调度策略"""
 
     def __init__(self):
         self.draw_interval = 210  # 3.5分钟一期
-        self.maintenance_start = time(19, 0)   # 19:00
-        self.maintenance_end = time(19, 30)    # 19:30
-        self.daily_start = time(0, 3, 46)      # 00:03:46
-        self.daily_end = time(23, 58, 46)      # 23:58:46
+        self.maintenance_start = time(19, 0)  # 19:00
+        self.maintenance_end = time(19, 30)  # 19:30
+        self.daily_start = time(0, 3, 46)  # 00:03:46
+        self.daily_end = time(23, 58, 46)  # 23:58:46
 
     def is_maintenance_window(self, check_time=None):
         """检查是否在维护窗口"""
@@ -49,21 +50,19 @@ class PC28SchedulingStrategy:
                 "frequency": "每2分钟",
                 "reason": "开奖间隔3.5分钟，2分钟频率确保不遗漏",
                 "avoid_windows": ["维护期 19:00-19:30", "非开奖期 23:58:46-00:03:46"],
-                "implementation": "Cloud Scheduler + Cloud Run"
+                "implementation": "Cloud Scheduler + Cloud Run",
             },
-
             "historical_backfill": {
                 "timing": "每日凌晨 01:00-03:00",
                 "reason": "非开奖期，系统负载低，有充足时间处理",
                 "batch_size": "每次200条，分块处理",
-                "target_window": "2小时足够处理任何缺失数据"
+                "target_window": "2小时足够处理任何缺失数据",
             },
-
             "maintenance_handling": {
                 "detection": "API响应监控 + 时间窗口",
                 "fallback": "维护期间暂停实时拉取",
-                "recovery": "19:31开始立即拉取 + 检查缺失数据"
-            }
+                "recovery": "19:31开始立即拉取 + 检查缺失数据",
+            },
         }
 
     async def smart_realtime_fetching(self):
@@ -80,7 +79,9 @@ class PC28SchedulingStrategy:
             if self.is_maintenance_window(current_time):
                 logger.info("维护窗口，暂停拉取")
                 # 等待到维护结束
-                wait_until = datetime.combine(datetime.now().date(), self.maintenance_end)
+                wait_until = datetime.combine(
+                    datetime.now().date(), self.maintenance_end
+                )
                 if wait_until < datetime.now():
                     wait_until += timedelta(days=1)
                 wait_seconds = (wait_until - datetime.now()).total_seconds()
@@ -117,11 +118,11 @@ class PC28SchedulingStrategy:
             logger.info("开始历史数据回填")
             try:
                 # 回填昨天的数据（如果有遗漏）
-                yesterday = (now - timedelta(days=1)).strftime('%Y-%m-%d')
+                yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
                 await self.intelligent_backfill(yesterday)
 
                 # 回填前天的数据（双重保险）
-                day_before = (now - timedelta(days=2)).strftime('%Y-%m-%d')
+                day_before = (now - timedelta(days=2)).strftime("%Y-%m-%d")
                 await self.intelligent_backfill(day_before)
 
                 logger.info("历史回填完成")
@@ -135,13 +136,17 @@ class PC28SchedulingStrategy:
     async def intelligent_backfill(self, date):
         """智能历史回填 - 只回填缺失的数据"""
         # 1. 检查当天应有的期数
-        expected_draws_per_day = int((23*3600 + 58*60 + 46 - 3*60 - 46) / 210)  # 约280期
+        expected_draws_per_day = int(
+            (23 * 3600 + 58 * 60 + 46 - 3 * 60 - 46) / 210
+        )  # 约280期
 
         # 2. 查询已有期数
         existing_count = await self.count_existing_draws(date)
 
         # 3. 如果缺失较多，执行回填
-        missing_ratio = (expected_draws_per_day - existing_count) / expected_draws_per_day
+        missing_ratio = (
+            expected_draws_per_day - existing_count
+        ) / expected_draws_per_day
 
         if missing_ratio > 0.05:  # 缺失5%以上才回填
             logger.info(f"日期 {date} 缺失 {missing_ratio:.1%} 数据，开始回填")
@@ -167,7 +172,10 @@ class PC28SchedulingStrategy:
 
             logger.info(f"日期 {date} 回填完成，新增 {total_backfilled} 条记录")
         else:
-            logger.info(f"日期 {date} 数据完整 ({existing_count}/{expected_draws_per_day})，跳过回填")
+            logger.info(
+                f"日期 {date} 数据完整 ({existing_count}/{expected_draws_per_day})，跳过回填"
+            )
+
 
 def create_cloud_scheduler_config():
     """生成 Cloud Scheduler 配置"""
@@ -178,16 +186,15 @@ def create_cloud_scheduler_config():
             "time_zone": "Asia/Shanghai",
             "http_target": {
                 "uri": "https://pc28-push-endpoints-644485179199.us-central1.run.app/fetch/realtime",
-                "http_method": "GET"
+                "http_method": "GET",
             },
             "retry_config": {
                 "retry_count": 3,
                 "max_retry_duration": "300s",
                 "min_backoff_duration": "5s",
-                "max_backoff_duration": "60s"
-            }
+                "max_backoff_duration": "60s",
+            },
         },
-
         "historical_backfill_job": {
             "name": "pc28-historical-backfill",
             "schedule": "0 1 * * *",  # 每日凌晨1点
@@ -195,20 +202,20 @@ def create_cloud_scheduler_config():
             "http_target": {
                 "uri": "https://pc28-push-endpoints-644485179199.us-central1.run.app/backfill/smart",
                 "http_method": "POST",
-                "body": '{"days": 2, "intelligent": true}'
-            }
+                "body": '{"days": 2, "intelligent": true}',
+            },
         },
-
         "maintenance_recovery_job": {
             "name": "pc28-maintenance-recovery",
             "schedule": "31 19 * * *",  # 每日19:31 (维护结束后)
             "time_zone": "Asia/Shanghai",
             "http_target": {
                 "uri": "https://pc28-push-endpoints-644485179199.us-central1.run.app/recovery/post-maintenance",
-                "http_method": "GET"
-            }
-        }
+                "http_method": "GET",
+            },
+        },
     }
+
 
 def get_recommendations():
     """获取调度建议"""
@@ -244,6 +251,7 @@ def get_recommendations():
     3. 实现智能回填端点
     4. 设置监控告警
     """
+
 
 if __name__ == "__main__":
     strategy = PC28SchedulingStrategy()

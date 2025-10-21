@@ -43,14 +43,14 @@ class PIController:
         k_cov = float(knobs["k_cov"])
         k_up = float(knobs["k_acc_up"])
         k_dn = float(knobs["k_acc_dn"])
-        
+
         err_cov = t_cov - (cov or 0.0)
         err_acc = (t_acc - acc) if (acc is not None) else 0.0
-        
+
         delta = k_cov*err_cov + (k_dn*max(err_acc,0.0) - k_up*max(-err_acc,0.0))
         new_floor = self.state["min_accept"] - delta
         new_floor = max(min_b, min(max_b, new_floor))
-        
+
         return {"min_accept": new_floor, "changed": changed, "err_cov": err_cov, "err_acc": err_acc, "mode": self.mode}
 ```
 
@@ -108,7 +108,7 @@ CLUSTER BY market;
 ```sql
 CREATE OR REPLACE VIEW `${PROJECT}.${DS_LAB}.kpi_realtime_v` AS
 WITH recent_window AS (
-  SELECT 
+  SELECT
     market,
     COUNT(*) as n_orders,
     COUNTIF(outcome IN ('win','lose')) as n_settled,
@@ -125,7 +125,7 @@ draw_count AS (
   FROM `${PROJECT}.${DS_DRAW}.draws_14w_dedup_v`
   WHERE timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 60 MINUTE)
 )
-SELECT 
+SELECT
   r.*,
   d.n_draws,
   SAFE_DIVIDE(r.n_orders, d.n_draws) as coverage_rate,
@@ -146,7 +146,7 @@ CROSS JOIN draw_count d;
 states = {
   "NORMAL": "正常运行",
   "LOW_COVERAGE": "覆盖率不足",
-  "BOOST_ACTIVE": "抬量激活", 
+  "BOOST_ACTIVE": "抬量激活",
   "HIGH_ACCURACY": "高准确率",
   "LOW_ACCURACY": "低准确率"
 }
@@ -165,19 +165,19 @@ transitions = {
 def autoswitch_decision(cov, acc, settled, state):
     if settled < min_settled:
         return "WAIT_SAMPLES"
-    
+
     if acc < acc_abort:
         return "EMERGENCY_CONSERVATIVE"
-    
+
     if cov < cov_lo and acc >= acc_guard:
         return "ACTIVATE_BOOST"
-    
+
     if cov >= cov_hi:
         return "DEACTIVATE_BOOST"
-    
+
     if acc >= 0.85 and cov >= 0.50:
         return "SUGGEST_AGGRESSIVE"
-    
+
     return "MAINTAIN_CURRENT"
 ```
 
@@ -230,7 +230,7 @@ lock_files = [
 ```python
 unlock_conditions = {
   "accuracy_recovery": "准确率恢复到80%以上",
-  "drawdown_recovery": "回撤恢复到5%以下", 
+  "drawdown_recovery": "回撤恢复到5%以下",
   "system_stable": "系统稳定运行30分钟",
   "manual_unlock": "人工解锁"
 }

@@ -15,7 +15,6 @@ from typing import Any, Dict
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-
 app = FastAPI()
 
 
@@ -53,4 +52,3 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run("mcp_mock_server:app", host="0.0.0.0", port=8000, reload=False)
-

@@ -18,4 +18,3 @@ echo "Preparing environment for MCP tests ..."
 $PY -m pip install -q fastapi uvicorn requests >/dev/null 2>&1 || true
 
 exec ./scripts/run_tests.sh
-

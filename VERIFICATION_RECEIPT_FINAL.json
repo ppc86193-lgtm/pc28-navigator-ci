@@ -3,7 +3,7 @@
   "supervisor": "项目总指挥大人 + AI监督者",
   "repair_action": "修复candidates_today_dedup_v视图",
   "repair_method": "执行BigQuery视图重建，使用正确字段名",
-  
+
   "before_repair": {
     "tier_candidate": "NULL",
     "signal_count": 0,
@@ -12,7 +12,7 @@
     "keyB": "false",
     "issue": "视图字段名错误导致信号生成停摆"
   },
-  
+
   "after_repair": {
     "tier_candidate": "Gold",
     "signal_count": 5,
@@ -22,17 +22,17 @@
     "veto": false,
     "status": "信号生成已恢复"
   },
-  
+
   "audit_trail": {
     "bigquery_job_id": "bqjob_r55f89abc6b585eff_00000199562279db_1",
-    "view_replaced": "wprojectl.pc28.candidates_today_dedup_v", 
+    "view_replaced": "wprojectl.pc28.candidates_today_dedup_v",
     "sql_operation": "CREATE OR REPLACE VIEW",
     "execution_time": "2025-09-17T13:25:00+08:00",
     "can_reproduce": true,
     "can_backtest": true,
     "data_source": "wprojectl.pc28.p_ensemble_today_norm_v"
   },
-  
+
   "verification_evidence": {
     "verification_query": "SELECT period, tier_candidate, p_star_ens, keyB FROM wprojectl.pc28.candidates_today_dedup_v ORDER BY ts_utc DESC",
     "sample_results": [
@@ -42,7 +42,7 @@
     ],
     "verification_status": "PASSED"
   },
-  
+
   "technical_details": {
     "root_cause": "BigQuery视图字段名不一致 (timestamp vs ts_utc)",
     "fix_approach": "统一使用timestamp字段，降低阈值到0.56",
@@ -50,7 +50,7 @@
     "ev_check": "EV = 1.95 * p_star_ens - 1.0 > 0",
     "b_key_logic": "keyB = (EV > 0)"
   },
-  
+
   "compliance_verification": {
     "real_data_only": true,
     "no_simulation": true,
@@ -60,7 +60,7 @@
     "can_reproduce_results": true,
     "follows_gtp_specification": true
   },
-  
+
   "next_steps": {
     "immediate": [
       "监控修复后的信号生成状态",
@@ -69,7 +69,7 @@
     ],
     "short_term": [
       "修复其他视图的字段名问题",
-      "恢复Vertex AI实时预测流程", 
+      "恢复Vertex AI实时预测流程",
       "设置AI/ML API密钥"
     ],
     "long_term": [
@@ -78,7 +78,7 @@
       "建立持续监控机制"
     ]
   },
-  
+
   "supervisor_assessment": {
     "repair_success": true,
     "signal_generation_restored": true,

@@ -7,6 +7,7 @@ import pytest
 
 try:
     import ruptures as _rpt  # noqa: F401
+
     HAS_RUPTURES = True
 except Exception:
     HAS_RUPTURES = False
@@ -31,7 +32,11 @@ async def test_turning_point_fields_and_change_points():
     bsc = res.get("big_small_changes", [])
     if bsc:
         item = bsc[0]
-        assert set(["position", "type", "confidence", "segment_avg", "segment_length"]) - item.keys() == set()
+        assert (
+            set(["position", "type", "confidence", "segment_avg", "segment_length"])
+            - item.keys()
+            == set()
+        )
         assert isinstance(item["position"], int) and item["position"] > 0
         assert item["type"] in {"大", "小"}
         assert 0 <= item["confidence"] <= 1

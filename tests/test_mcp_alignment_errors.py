@@ -5,9 +5,9 @@ MCP 文档对齐：错误路径用例（Mock MCP）
 """
 
 import os
+
 import pytest
 import requests
-
 
 ENABLED = os.environ.get("ENABLE_MCP_TESTS", "0") == "1"
 
@@ -33,4 +33,3 @@ def test_tools_call_invalid_arguments_type():
     r = requests.post("http://localhost:8000/tools/call", json=payload, timeout=5)
     assert r.status_code == 400
     assert r.json().get("error") == "invalid_arguments"
-

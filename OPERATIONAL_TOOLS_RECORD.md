@@ -183,10 +183,10 @@ gcloud ai batch-predictions describe <job-name> --project=${PROJECT} --region=${
 
 # 2. 导出今日缺口period的特征
 WITH gap_periods AS (
-  SELECT d.period 
-  FROM draws_14w_dedup_v d 
-  LEFT JOIN cloud_pred_today_norm p USING(period) 
-  WHERE p.period IS NULL 
+  SELECT d.period
+  FROM draws_14w_dedup_v d
+  LEFT JOIN cloud_pred_today_norm p USING(period)
+  WHERE p.period IS NULL
     AND DATE(d.timestamp,'Asia/Shanghai')=CURRENT_DATE('Asia/Shanghai')
 )
 SELECT period FROM gap_periods ORDER BY period;

@@ -59,7 +59,7 @@ ai_deployment_config = {
     },
     "grok-4": {
         "instances": 3,
-        "role": "复杂问题诊断", 
+        "role": "复杂问题诊断",
         "frequency": "高频调用"
     },
     "deepseek-r1": {
@@ -113,7 +113,7 @@ ai_deployment_config = {
 ```
 数据分布策略:
 • 主数据: Google Cloud BigQuery
-• 备份数据: Azure SQL Database  
+• 备份数据: Azure SQL Database
 • 冷存储: AWS S3 Glacier
 • 实时同步: 跨云数据流
 ```

@@ -43,7 +43,7 @@ if [ "$LATEST_ROW" = "null" ] || [ "$LATEST_ROW" = "" ]; then
   VALUES
   (CURRENT_TIMESTAMP(), '$RUN_SERVICE', 'test-rev-001', 'sha256:abc123...', 3336598, 0, 0, 'verify_script')
   " >/dev/null
-  
+
   # 重新查询
   LATEST_ROW=$(bq query --project_id="$PROJECT" --location="$REGION" --nouse_legacy_sql --format=json "
   SELECT
@@ -91,7 +91,7 @@ echo "[3/3] 100% 云端运行 · 位点证明"
 # 检查是否存在Cloud Run服务
 if ! gcloud run services describe "$RUN_SERVICE" --region "$REGION" --project "$PROJECT" >/dev/null 2>&1; then
   echo "   ⚠️ Cloud Run服务 $RUN_SERVICE 不存在，创建测试服务..."
-  
+
   # 创建一个简单的测试服务
   echo "FROM gcr.io/cloudrun/hello" > Dockerfile.test
   gcloud builds submit --tag "gcr.io/$PROJECT/pc28-test" . >/dev/null 2>&1 || true
@@ -116,22 +116,22 @@ if [ "$ACTIVE_REV" != "test-revision" ]; then
   REV_DESC=$(gcloud run revisions describe "$ACTIVE_REV" --region "$REGION" --project "$PROJECT" --format=json 2>/dev/null || echo '{}')
   IMG_DIGEST=$(echo "$REV_DESC" | jq -r '.spec.containers[0].image // "gcr.io/cloudrun/hello"')
   SA_EMAIL=$(echo "$REV_DESC" | jq -r '.spec.serviceAccountName // "default"')
-  
+
   # 规则：只允许 REGION/PROJECT 这一处位点 + 指定服务账户
   ALLOWED_SA_SUFFIX="@${PROJECT}.iam.gserviceaccount.com"
-  
+
   if [[ "$IMG_DIGEST" == *"@sha256:"* ]]; then
     ok "镜像已锁定 Digest: ${IMG_DIGEST}"
   else
     echo "   ⚠️ 镜像未锁定 Digest（使用标签）: $IMG_DIGEST"
   fi
-  
+
   if [[ "$SA_EMAIL" == *"$ALLOWED_SA_SUFFIX" ]] || [ "$SA_EMAIL" = "default" ]; then
     ok "服务账户合规: $SA_EMAIL"
   else
     echo "   ⚠️ 服务账户不在项目域内：$SA_EMAIL"
   fi
-  
+
   ok "云端修订=$ACTIVE_REV image=$IMG_DIGEST sa=$SA_EMAIL（位点与身份已检查）"
 else
   ok "测试修订=$ACTIVE_REV（测试环境）"

@@ -17,4 +17,4 @@
                     )) as prediction_data,
                     CURRENT_TIMESTAMP() as created_at;
                 END
-                
+

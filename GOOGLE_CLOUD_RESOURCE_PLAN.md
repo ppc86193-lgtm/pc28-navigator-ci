@@ -18,14 +18,14 @@
 • 日成本: ~$0.50
 
 问题分析Agent:
-• gpt-4o: $0.005/1k tokens  
+• gpt-4o: $0.005/1k tokens
 • deepseek/deepseek-r1: $0.00055/1k tokens
 • 日均调用: ~400k tokens
 • 日成本: ~$2.00
 
 深度分析Agent:
 • openai/gpt-5-2025-08-07: $0.01/1k tokens
-• 日均调用: ~100k tokens  
+• 日均调用: ~100k tokens
 • 日成本: ~$1.00
 
 AI/ML API小计: $3.50/天

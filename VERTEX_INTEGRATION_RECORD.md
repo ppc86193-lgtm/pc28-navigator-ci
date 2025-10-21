@@ -12,9 +12,9 @@ gcloud ai batch-predictions describe <job-name> --project=${PROJECT} --region=${
 
 # 2. 识别今日缺口periods
 WITH gap_analysis AS (
-  SELECT d.period 
+  SELECT d.period
   FROM `${PROJECT}.${DS_DRAW}.draws_14w_dedup_v` d
-  LEFT JOIN `${PROJECT}.${DS_LAB}.cloud_pred_today_norm` p 
+  LEFT JOIN `${PROJECT}.${DS_LAB}.cloud_pred_today_norm` p
     ON d.period = p.period
   WHERE DATE(d.timestamp,'${TZ}') = CURRENT_DATE('${TZ}')
     AND p.period IS NULL
@@ -44,18 +44,18 @@ done
 
 # 6. 解析输出predictions.jsonl
 # 规范化格式: period,p_even,timestamp
-awk 'BEGIN{print "period,p_even,timestamp"} 
+awk 'BEGIN{print "period,p_even,timestamp"}
 {
   # 提取period和scores
   if ($0 ~ /"period":/) { match($0, /"period":"([^"]+)"/, a); period=a[1]; }
-  if ($0 ~ /"scores":\[/) { 
-    match($0, /\[([0-9\.\, ]+)\]/, b); 
-    split(b[1], arr, ","); 
-    if (length(arr)>=2) p_even=arr[2]+0; 
+  if ($0 ~ /"scores":\[/) {
+    match($0, /\[([0-9\.\, ]+)\]/, b);
+    split(b[1], arr, ",");
+    if (length(arr)>=2) p_even=arr[2]+0;
   }
   if (period!="") {
-    cmd="date -u +%Y-%m-%dT%H:%M:%SZ"; 
-    cmd | getline timestamp; 
+    cmd="date -u +%Y-%m-%dT%H:%M:%SZ";
+    cmd | getline timestamp;
     close(cmd);
     print period, p_even, timestamp;
   }
@@ -110,14 +110,14 @@ verify_bucket_distribution() {
 # OE/SIZE分别统计
 get_oe_kpi() {
   bq query --format=csv "
-  SELECT 
+  SELECT
     'oe' as market,
     COUNT(*) as n_orders,
     COUNTIF(outcome IN ('win','lose')) as n_settled,
     SAFE_DIVIDE(COUNTIF(outcome='win'), NULLIF(COUNTIF(outcome IN ('win','lose')),0)) as accuracy,
     AVG(p_win) as avg_p_win,
     SAFE_DIVIDE(COUNT(*), (SELECT COUNT(*) FROM draws_14w_dedup_v WHERE DATE(timestamp,'${TZ}')=CURRENT_DATE('${TZ}'))) as coverage
-  FROM score_ledger 
+  FROM score_ledger
   WHERE market='oe' AND day_id_cst=CURRENT_DATE('${TZ}')
   "
 }
@@ -172,7 +172,7 @@ request_format = {
 # 打包内容
 package_contents = [
   "配置文件快照",
-  "SQL视图定义", 
+  "SQL视图定义",
   "Python模块代码",
   "执行日志",
   "KPI报告",
@@ -183,7 +183,7 @@ package_contents = [
 # 打包格式
 tar_structure = {
   "config/": "配置文件",
-  "sql/": "SQL定义", 
+  "sql/": "SQL定义",
   "logs/": "执行日志",
   "reports/": "KPI报告",
   "backups/": "回滚备份"
@@ -204,7 +204,7 @@ gist_upload = {
 # 日志文件管理
 log_files = [
   "TEMP_CODE/logs/pc28_enhanced_system.log",
-  "TEMP_CODE/logs/auto_smart_switch.log", 
+  "TEMP_CODE/logs/auto_smart_switch.log",
   "TEMP_CODE/logs/pi_controller.log",
   "TEMP_CODE/logs/calibrator.log"
 ]

@@ -48,7 +48,7 @@ echo "✅ 请求文件已创建"
 
 # 执行KPI诊断
 bq --location="$BQLOC" query --use_legacy_sql=false --format=json "
-SELECT 
+SELECT
   'emergency_kpi_check' as check_type,
   CURRENT_TIMESTAMP() as check_time,
   COUNT(*) as total_draws

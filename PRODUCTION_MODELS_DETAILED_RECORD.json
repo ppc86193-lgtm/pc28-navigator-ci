@@ -4,7 +4,7 @@
   "region": "us-central1",
   "extracted_by": "realtime_monitor_agent",
   "supervisor": "项目总指挥大人",
-  
+
   "vertex_ai_models_detailed": {
     "total_models": 10,
     "creation_date": "2025-09-08",
@@ -22,7 +22,7 @@
             "specialization": "大号+偶数组合预测"
           },
           {
-            "model_id": "394112246394912768", 
+            "model_id": "394112246394912768",
             "display_name": "pc28-model-hit-combo-small-even",
             "purpose": "预测小偶组合",
             "create_time": "2025-09-08T14:15:04.798729Z",
@@ -32,7 +32,7 @@
           },
           {
             "model_id": "7876843027270991872",
-            "display_name": "pc28-model-hit-combo-big-odd", 
+            "display_name": "pc28-model-hit-combo-big-odd",
             "purpose": "预测大奇组合",
             "create_time": "2025-09-08T13:48:11.010454Z",
             "update_time": "2025-09-08T13:51:24.827641Z",
@@ -41,7 +41,7 @@
           }
         ]
       },
-      
+
       "odd_even_models": {
         "description": "奇偶预测专业模型",
         "models": [
@@ -49,7 +49,7 @@
             "model_id": "3893409156861788160",
             "display_name": "pc28-model-hit-odd-even-even",
             "purpose": "预测偶数概率",
-            "create_time": "2025-09-08T14:11:26.330546Z", 
+            "create_time": "2025-09-08T14:11:26.330546Z",
             "update_time": "2025-09-08T14:17:42.716359Z",
             "training_duration_minutes": 6.3,
             "specialization": "奇偶偶模式预测"
@@ -57,7 +57,7 @@
           {
             "model_id": "2740487652254941184",
             "display_name": "pc28-model-hit-odd-even-odd",
-            "purpose": "预测奇数概率", 
+            "purpose": "预测奇数概率",
             "create_time": "2025-09-08T13:47:41.125026Z",
             "update_time": "2025-09-08T13:51:43.641580Z",
             "training_duration_minutes": 4.0,
@@ -65,7 +65,7 @@
           }
         ]
       },
-      
+
       "size_models": {
         "description": "大小预测专业模型",
         "models": [
@@ -74,7 +74,7 @@
             "display_name": "pc28-hit-size-big",
             "purpose": "预测大号概率",
             "create_time": "2025-09-08T13:37:18.416654Z",
-            "update_time": "2025-09-08T13:51:34.473334Z", 
+            "update_time": "2025-09-08T13:51:34.473334Z",
             "training_duration_minutes": 14.3,
             "specialization": "大号预测 (sum>=14)"
           },
@@ -89,7 +89,7 @@
           }
         ]
       },
-      
+
       "ensemble_models": {
         "description": "集成和最终预测模型",
         "models": [
@@ -104,7 +104,7 @@
           },
           {
             "model_id": "4620740496682123264",
-            "display_name": "pc28-label-final2", 
+            "display_name": "pc28-label-final2",
             "purpose": "最终标签预测v2",
             "create_time": "2025-09-08T13:39:58.251838Z",
             "update_time": "2025-09-08T13:51:19.735884Z",
@@ -123,7 +123,7 @@
         ]
       }
     },
-    
+
     "model_architecture_analysis": {
       "training_strategy": "专业化分工训练",
       "model_specialization": {
@@ -145,7 +145,7 @@
         "average_training_time": "7.8分钟"
       }
     },
-    
+
     "model_integration_strategy": {
       "prediction_pipeline": {
         "step_1": "专业模型各自预测 (combo/odd_even/size)",
@@ -155,7 +155,7 @@
       },
       "weight_distribution": {
         "combo_models_weight": "40% (3个模型)",
-        "odd_even_models_weight": "20% (2个模型)", 
+        "odd_even_models_weight": "20% (2个模型)",
         "size_models_weight": "20% (2个模型)",
         "ensemble_models_weight": "20% (3个模型)"
       },
@@ -167,7 +167,7 @@
         "Tabular": "通用预测兜底"
       }
     },
-    
+
     "model_usage_in_production": {
       "current_status": "所有10个模型均已部署",
       "prediction_frequency": "实时预测 (3.5分钟一期)",
@@ -176,7 +176,7 @@
       "model_cooling": "低性能模型自动冷却机制",
       "ensemble_method": "加权投票集成"
     },
-    
+
     "detailed_model_specifications": {
       "input_features": {
         "historical_features": ["prev_sum", "prev_size", "prev_oe"],
@@ -199,7 +199,7 @@
         "data_quality": "清洗后的高质量数据"
       }
     },
-    
+
     "model_performance_in_production": {
       "current_p_star_range": "0.25 - 0.75",
       "average_confidence": "0.495",
@@ -208,7 +208,7 @@
       "model_health": "良好，边际盈利模型",
       "ensemble_effectiveness": "集成后性能稳定"
     },
-    
+
     "ai_ml_api_integration_plan": {
       "navigator_model_usage": {
         "gpt-5": {
@@ -220,7 +220,7 @@
         "claude-4.1-opus": {
           "purpose": "逻辑推理验证和交叉检查",
           "usage_scenario": "验证gpt-5的分析结论",
-          "cost_per_call": "$0.075/1k tokens", 
+          "cost_per_call": "$0.075/1k tokens",
           "expected_usage": "与gpt-5配对使用"
         },
         "gemini-2.5-pro": {
@@ -248,7 +248,7 @@
           "expected_usage": "高频，用于实时监控"
         }
       },
-      
+
       "model_routing_strategy": {
         "vertex_ai_models": "用于实际预测和交易信号生成",
         "ai_ml_api_models": "用于解释、分析、监控Vertex AI模型",
@@ -257,11 +257,11 @@
       }
     }
   },
-  
+
   "production_model_usage_audit": {
     "current_active_models": [
       "pc28-model-hit-combo-big-even",
-      "pc28-model-hit-combo-small-even", 
+      "pc28-model-hit-combo-small-even",
       "pc28-model-hit-odd-even-even",
       "pc28-model-hit-odd-even-odd",
       "pc28-model-hit-size-small",
@@ -276,13 +276,13 @@
     "model_cooling_mechanism": "低于55%准确率的模型自动冷却",
     "prediction_output_format": "p_star_ens概率值 (0-1范围)"
   },
-  
+
   "model_training_data_audit": {
     "training_data_source": "gs://wprojectl-ml-data/training_data_000000000000.csv",
     "data_schema": {
       "issue": "期号标识",
       "a": "第一个开奖数字",
-      "b": "第二个开奖数字", 
+      "b": "第二个开奖数字",
       "c": "第三个开奖数字",
       "sum": "和值 (a+b+c)",
       "tail": "尾数",
@@ -297,7 +297,7 @@
     "model_validation": "交叉验证 + 时间序列验证",
     "hyperparameter_tuning": "自动超参数优化"
   },
-  
+
   "real_time_audit_trail": {
     "audit_timestamp": "2025-09-17T13:15:00+08:00",
     "data_sources_verified": [

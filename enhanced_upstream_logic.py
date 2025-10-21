@@ -7,15 +7,14 @@
 - 智能异常检测
 """
 
-import asyncio
-import aiohttp
-from datetime import datetime, timedelta, time
-from google.cloud import bigquery
-import logging
 import json
-import hashlib
+import logging
+from datetime import datetime, time
+
+from google.cloud import bigquery
 
 logger = logging.getLogger(__name__)
+
 
 class EnhancedPC28Upstream:
     """增强的PC28上游逻辑"""
@@ -48,7 +47,9 @@ class EnhancedPC28Upstream:
             # 3. 获取彩票配置信息用于交叉验证
             lottery_info = await self._make_request("261")
             if lottery_info:
-                validated_data = self._cross_validate_with_lottery_info(validated_data, lottery_info)
+                validated_data = self._cross_validate_with_lottery_info(
+                    validated_data, lottery_info
+                )
 
             # 4. 构建增强的记录
             enhanced_record = self._build_enhanced_record(validated_data)
@@ -64,14 +65,14 @@ class EnhancedPC28Upstream:
                     "issue": enhanced_record["issue"],
                     "quality_score": quality_check["score"],
                     "fields_utilized": enhanced_record["fields_count"],
-                    "saved": saved
+                    "saved": saved,
                 }
             else:
                 logger.warning(f"数据质量检测失败: {quality_check['issues']}")
                 return {
                     "status": "quality_failed",
                     "quality_issues": quality_check["issues"],
-                    "data": enhanced_record
+                    "data": enhanced_record,
                 }
 
         except Exception as e:
@@ -82,16 +83,16 @@ class EnhancedPC28Upstream:
         """验证并增强API数据"""
         try:
             # 基础字段验证
-            if api_response.get('codeid') != 10000:
+            if api_response.get("codeid") != 10000:
                 logger.error(f"API状态异常: {api_response.get('codeid')}")
                 return None
 
-            retdata = api_response.get('retdata', {})
-            current = retdata.get('curent', {})
-            next_data = retdata.get('next', {})
+            retdata = api_response.get("retdata", {})
+            current = retdata.get("curent", {})
+            next_data = retdata.get("next", {})
 
             # 开奖号码验证
-            numbers = current.get('number', [])
+            numbers = current.get("number", [])
             if len(numbers) != 3 or not all(isinstance(n, (int, str)) for n in numbers):
                 logger.error(f"开奖号码格式异常: {numbers}")
                 return None
@@ -106,13 +107,13 @@ class EnhancedPC28Upstream:
                 return None
 
             # 期号格式验证
-            issue = current.get('long_issue')
+            issue = current.get("long_issue")
             if not issue or not str(issue).isdigit():
                 logger.error(f"期号格式异常: {issue}")
                 return None
 
             # 时间格式验证
-            kjtime = current.get('kjtime')
+            kjtime = current.get("kjtime")
             if not kjtime:
                 logger.warning("缺少开奖时间")
 
@@ -124,7 +125,7 @@ class EnhancedPC28Upstream:
                 "issue": str(issue),
                 "kjtime": kjtime,
                 "validation_passed": True,
-                "raw_response": json.dumps(api_response, ensure_ascii=False)
+                "raw_response": json.dumps(api_response, ensure_ascii=False),
             }
 
         except Exception as e:
@@ -134,33 +135,35 @@ class EnhancedPC28Upstream:
     def _cross_validate_with_lottery_info(self, data, lottery_info):
         """使用彩票信息进行交叉验证"""
         try:
-            lottery_data = lottery_info.get('retdata', {})
+            lottery_data = lottery_info.get("retdata", {})
 
             # 验证彩票类型
-            if lottery_data.get('l_alias') != 'canada28':
+            if lottery_data.get("l_alias") != "canada28":
                 logger.warning(f"彩票类型不匹配: {lottery_data.get('l_alias')}")
 
             # 验证开奖间隔
-            expected_interval = lottery_data.get('l_exp', {}).get('x1_', 210)
+            expected_interval = lottery_data.get("l_exp", {}).get("x1_", 210)
             if expected_interval != self.DRAW_INTERVAL_SECONDS:
-                logger.warning(f"开奖间隔不匹配: 期望{self.DRAW_INTERVAL_SECONDS}, 实际{expected_interval}")
+                logger.warning(
+                    f"开奖间隔不匹配: 期望{self.DRAW_INTERVAL_SECONDS}, 实际{expected_interval}"
+                )
 
             # 验证开奖时间是否在有效范围内
-            kjtime = data.get('kjtime')
+            kjtime = data.get("kjtime")
             if kjtime:
                 try:
-                    draw_time = datetime.strptime(kjtime, '%Y-%m-%d %H:%M:%S').time()
+                    draw_time = datetime.strptime(kjtime, "%Y-%m-%d %H:%M:%S").time()
                     valid_start = time(0, 3, 46)
                     valid_end = time(23, 58, 46)
 
                     if not (valid_start <= draw_time <= valid_end):
                         logger.warning(f"开奖时间超出有效范围: {draw_time}")
-                        data['time_validation_warning'] = True
+                        data["time_validation_warning"] = True
                 except ValueError:
                     logger.warning(f"时间格式解析失败: {kjtime}")
 
             # 添加彩票配置信息
-            data['lottery_config'] = lottery_data
+            data["lottery_config"] = lottery_data
             return data
 
         except Exception as e:
@@ -169,11 +172,11 @@ class EnhancedPC28Upstream:
 
     def _build_enhanced_record(self, validated_data):
         """构建增强的记录，利用所有可用字段"""
-        api_response = validated_data['api_response']
-        current = validated_data['current']
-        next_data = validated_data['next']
-        numbers = validated_data['numbers']
-        issue = validated_data['issue']
+        api_response = validated_data["api_response"]
+        current = validated_data["current"]
+        next_data = validated_data["next"]
+        numbers = validated_data["numbers"]
+        issue = validated_data["issue"]
 
         # 基础计算
         total_sum = sum(numbers)
@@ -181,46 +184,45 @@ class EnhancedPC28Upstream:
         # 增强的衍生字段计算
         enhanced_record = {
             # === 基础开奖数据 ===
-            'issue': issue,
-            'timestamp': validated_data.get('kjtime', datetime.now().isoformat()),
-            'a': numbers[0],
-            'b': numbers[1],
-            'c': numbers[2],
-            'sum': total_sum,
-
+            "issue": issue,
+            "timestamp": validated_data.get("kjtime", datetime.now().isoformat()),
+            "a": numbers[0],
+            "b": numbers[1],
+            "c": numbers[2],
+            "sum": total_sum,
             # === 增强的衍生字段 ===
-            'tail': total_sum % 10,
-            'size': 'large' if total_sum > 13 else 'small',
-            'odd_even': 'odd' if total_sum % 2 == 1 else 'even',
-
+            "tail": total_sum % 10,
+            "size": "large" if total_sum > 13 else "small",
+            "odd_even": "odd" if total_sum % 2 == 1 else "even",
             # PC28特有分析字段
-            'sum_range': self._get_sum_range(total_sum),  # 0-4, 5-9, 10-14, 15-19, 20-24, 25-27
-            'number_pattern': self._analyze_number_pattern(numbers),  # 豹子、对子、顺子等
-            'sum_tail_combo': f"{total_sum}_{total_sum % 10}",  # 和值+尾数组合
-
+            "sum_range": self._get_sum_range(
+                total_sum
+            ),  # 0-4, 5-9, 10-14, 15-19, 20-24, 25-27
+            "number_pattern": self._analyze_number_pattern(
+                numbers
+            ),  # 豹子、对子、顺子等
+            "sum_tail_combo": f"{total_sum}_{total_sum % 10}",  # 和值+尾数组合
             # === 完整API字段保留 ===
-            'api_codeid': api_response.get('codeid'),
-            'api_message': api_response.get('message', ''),
-            'api_curtime': api_response.get('curtime'),
-            'kjtime_raw': current.get('kjtime'),
-
+            "api_codeid": api_response.get("codeid"),
+            "api_message": api_response.get("message", ""),
+            "api_curtime": api_response.get("curtime"),
+            "kjtime_raw": current.get("kjtime"),
             # 下期信息
-            'next_issue': str(next_data.get('next_issue', '')),
-            'next_time': next_data.get('next_time'),
-            'award_time': next_data.get('award_time'),  # 距离下次开奖秒数
-
+            "next_issue": str(next_data.get("next_issue", "")),
+            "next_time": next_data.get("next_time"),
+            "award_time": next_data.get("award_time"),  # 距离下次开奖秒数
             # === 数据质量和元数据 ===
-            'data_source': 'enhanced_upstream_v2',
-            'validation_score': self._calculate_validation_score(validated_data),
-            'capture_timestamp': datetime.now().isoformat(),
-            'api_response_time': api_response.get('curtime'),
-
+            "data_source": "enhanced_upstream_v2",
+            "validation_score": self._calculate_validation_score(validated_data),
+            "capture_timestamp": datetime.now().isoformat(),
+            "api_response_time": api_response.get("curtime"),
             # 完整原始响应
-            'raw_api_response': validated_data['raw_response'],
-
+            "raw_api_response": validated_data["raw_response"],
             # 质量指标
-            'fields_count': len([k for k in api_response.keys() if api_response[k] is not None]),
-            'completeness_ratio': self._calculate_completeness(api_response)
+            "fields_count": len(
+                [k for k in api_response.keys() if api_response[k] is not None]
+            ),
+            "completeness_ratio": self._calculate_completeness(api_response),
         }
 
         return enhanced_record
@@ -253,7 +255,10 @@ class EnhancedPC28Upstream:
             return "pair"
 
         # 顺子（连续）
-        elif sorted_nums[2] - sorted_nums[0] == 2 and sorted_nums[1] - sorted_nums[0] == 1:
+        elif (
+            sorted_nums[2] - sorted_nums[0] == 2
+            and sorted_nums[1] - sorted_nums[0] == 1
+        ):
             return "sequence"
 
         # 跨度分析
@@ -270,19 +275,19 @@ class EnhancedPC28Upstream:
         score = 100
 
         # 基础字段完整性
-        if not data.get('kjtime'):
+        if not data.get("kjtime"):
             score -= 10
-        if not data.get('issue'):
+        if not data.get("issue"):
             score -= 20
-        if len(data.get('numbers', [])) != 3:
+        if len(data.get("numbers", [])) != 3:
             score -= 30
 
         # 时间逻辑验证
-        if data.get('time_validation_warning'):
+        if data.get("time_validation_warning"):
             score -= 15
 
         # 数值合理性
-        numbers = data.get('numbers', [])
+        numbers = data.get("numbers", [])
         if numbers:
             if not all(0 <= n <= 27 for n in numbers):
                 score -= 20
@@ -291,11 +296,11 @@ class EnhancedPC28Upstream:
 
     def _calculate_completeness(self, api_response):
         """计算API响应完整度"""
-        expected_fields = [
-            'codeid', 'message', 'curtime', 'retdata'
-        ]
+        expected_fields = ["codeid", "message", "curtime", "retdata"]
 
-        available = sum(1 for field in expected_fields if api_response.get(field) is not None)
+        available = sum(
+            1 for field in expected_fields if api_response.get(field) is not None
+        )
         return available / len(expected_fields)
 
     def _perform_quality_check(self, record):
@@ -304,21 +309,23 @@ class EnhancedPC28Upstream:
         score = 100
 
         # 检查必要字段
-        required_fields = ['issue', 'a', 'b', 'c', 'sum']
+        required_fields = ["issue", "a", "b", "c", "sum"]
         for field in required_fields:
             if record.get(field) is None:
                 issues.append(f"缺少必要字段: {field}")
                 score -= 20
 
         # 检查数值合理性
-        if record.get('sum') != record.get('a', 0) + record.get('b', 0) + record.get('c', 0):
+        if record.get("sum") != record.get("a", 0) + record.get("b", 0) + record.get(
+            "c", 0
+        ):
             issues.append("和值计算不一致")
             score -= 30
 
         # 检查时间合理性
-        if record.get('kjtime_raw'):
+        if record.get("kjtime_raw"):
             try:
-                draw_time = datetime.strptime(record['kjtime_raw'], '%Y-%m-%d %H:%M:%S')
+                draw_time = datetime.strptime(record["kjtime_raw"], "%Y-%m-%d %H:%M:%S")
                 if abs((datetime.now() - draw_time).total_seconds()) > 300:  # 5分钟
                     issues.append("开奖时间与当前时间差异过大")
                     score -= 10
@@ -326,11 +333,7 @@ class EnhancedPC28Upstream:
                 issues.append("开奖时间格式异常")
                 score -= 15
 
-        return {
-            "passed": len(issues) == 0,
-            "score": max(score, 0),
-            "issues": issues
-        }
+        return {"passed": len(issues) == 0, "score": max(score, 0), "issues": issues}
 
     def daily_completeness_check(self, date=None):
         """每日数据完整性检查"""
@@ -361,7 +364,11 @@ class EnhancedPC28Upstream:
 
         # 计算完整性
         completeness = (stats.actual_count / self.DAILY_EXPECTED_DRAWS) * 100
-        quality_ratio = ((stats.actual_count - stats.low_quality_count) / stats.actual_count * 100) if stats.actual_count > 0 else 0
+        quality_ratio = (
+            ((stats.actual_count - stats.low_quality_count) / stats.actual_count * 100)
+            if stats.actual_count > 0
+            else 0
+        )
 
         return {
             "date": str(date),
@@ -375,7 +382,11 @@ class EnhancedPC28Upstream:
             "last_draw": stats.last_draw.isoformat() if stats.last_draw else None,
             "data_sources": stats.source_types,
             "low_quality_count": stats.low_quality_count,
-            "status": "excellent" if completeness >= 98 else "good" if completeness >= 95 else "needs_attention"
+            "status": (
+                "excellent"
+                if completeness >= 98
+                else "good" if completeness >= 95 else "needs_attention"
+            ),
         }
 
     async def intelligent_gap_detection_and_fill(self, date):
@@ -385,7 +396,7 @@ class EnhancedPC28Upstream:
         if completeness_report["completeness_pct"] >= 98:
             return {
                 "status": "complete",
-                "message": f"数据完整度{completeness_report['completeness_pct']}%，无需回填"
+                "message": f"数据完整度{completeness_report['completeness_pct']}%，无需回填",
             }
 
         # 检测具体缺失的时间段
@@ -400,7 +411,11 @@ class EnhancedPC28Upstream:
                 "original_completeness": completeness_report["completeness_pct"],
                 "missing_periods": len(missing_periods),
                 "filled_count": filled_count,
-                "estimated_new_completeness": min(100, completeness_report["completeness_pct"] + (filled_count / self.DAILY_EXPECTED_DRAWS * 100))
+                "estimated_new_completeness": min(
+                    100,
+                    completeness_report["completeness_pct"]
+                    + (filled_count / self.DAILY_EXPECTED_DRAWS * 100),
+                ),
             }
 
         return {"status": "no_action", "reason": "无法检测到明确的缺失模式"}
@@ -441,8 +456,9 @@ def create_enhanced_endpoints():
     return {
         "enhanced_fetch": enhanced_client.enhanced_fetch_with_validation,
         "completeness_check": enhanced_client.daily_completeness_check,
-        "gap_detection": enhanced_client.intelligent_gap_detection_and_fill
+        "gap_detection": enhanced_client.intelligent_gap_detection_and_fill,
     }
+
 
 """
 增强功能总结:

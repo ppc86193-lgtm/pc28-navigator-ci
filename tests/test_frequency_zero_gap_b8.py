@@ -19,4 +19,3 @@ async def test_frequency_zero_gap_contributions():
     assert ta["overall_strength"] == 0
     assert ta["big_small_contribution"] == 0
     assert ta["odd_even_contribution"] == 0
-

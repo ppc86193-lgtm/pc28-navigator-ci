@@ -20,7 +20,7 @@ targets: {
 
 # 三种模式的控制参数
 conservative: {k_cov: 0.10, k_acc_up: 0.10, k_acc_dn: 0.30}
-balanced:     {k_cov: 0.20, k_acc_up: 0.15, k_acc_dn: 0.35}  
+balanced:     {k_cov: 0.20, k_acc_up: 0.15, k_acc_dn: 0.35}
 aggressive:   {k_cov: 0.35, k_acc_up: 0.20, k_acc_dn: 0.40}
 
 # 控制逻辑
@@ -183,7 +183,7 @@ WITH L AS (
     AND market IN ('oe','size')
     AND created_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 60 MINUTE)
 )
-SELECT 
+SELECT
   market,
   COUNT(*) AS n_ord_w,
   COUNTIF(outcome IN ('win','lose')) AS n_set_w,
@@ -221,7 +221,7 @@ FROM L GROUP BY market
   "ts": "2025-09-17T12:30:00Z"
 }
 
-// mode_switch_request.json  
+// mode_switch_request.json
 {
   "mode": "balanced",
   "ttl_sec": 900,
@@ -289,7 +289,7 @@ curl -sS -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
 tail -n 60 TEMP_CODE/logs/pc28_enhanced_system.log
 
 # B. 候选增多验证
-SELECT COUNT(*) AS n_cand FROM lab_push_candidates_v2 
+SELECT COUNT(*) AS n_cand FROM lab_push_candidates_v2
 WHERE day_id_cst=CURRENT_DATE AND ev>0 AND p_win>theta
 
 # C. 账目增长验证
@@ -397,7 +397,7 @@ TZ="${TZ:-Asia/Shanghai}"
 
 # 参数修复
 min_bucket=0.33     # 降低下限
-theta=0.56          # 降低阈值  
+theta=0.56          # 降低阈值
 temperature=0.95    # 校准参数
 mode=balanced       # 平衡模式
 
@@ -411,7 +411,7 @@ mode=balanced       # 平衡模式
 -- 覆盖率
 COV = n_ord / n_draws
 
--- 准确率  
+-- 准确率
 ACC = n_win / (n_win + n_lose)
 
 -- 期望收益
@@ -467,7 +467,7 @@ def apply_runtime_patch():
     floor_req = _read_floor_request()
     if floor_req:
         cfg["voting"]["accept_floor"] = max(cfg["voting"]["accept_floor"], floor_req)
-    
+
     mode_req = _read_mode_request()
     if mode_req:
         cfg["meta"]["run_mode"] = mode_req

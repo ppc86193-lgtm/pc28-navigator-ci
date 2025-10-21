@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-import asyncio
-import aiohttp
+import hashlib
+import logging
 import os
 import time
-import hashlib
-import json
-from flask import Flask, jsonify
 from datetime import datetime
-from google.cloud import bigquery, secretmanager
-import logging
+
+import aiohttp
+from flask import Flask, jsonify
+from google.cloud import bigquery
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -16,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 bq_client = bigquery.Client(project="wprojectl", location="us-central1")
+
 
 class PC28APIClient:
     def __init__(self):
@@ -34,18 +34,20 @@ class PC28APIClient:
         """获取最新开奖数据"""
         timestamp = str(int(time.time()))
         params = {
-            'appid': self.appid,
-            'format': 'json',
-            'time': timestamp,
-            'sign': self.generate_sign({'time': timestamp})
+            "appid": self.appid,
+            "format": "json",
+            "time": timestamp,
+            "sign": self.generate_sign({"time": timestamp}),
         }
 
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(self.api_base, params=params, timeout=10) as response:
+                async with session.get(
+                    self.api_base, params=params, timeout=10
+                ) as response:
                     if response.status == 200:
                         data = await response.json()
-                        if data.get('codeid') == 10000:  # 成功状态码
+                        if data.get("codeid") == 10000:  # 成功状态码
                             return data
                         else:
                             logger.error(f"API返回错误: {data}")
@@ -60,27 +62,27 @@ class PC28APIClient:
     def save_to_bigquery(self, draw_data: dict):
         """保存开奖数据到BigQuery"""
         try:
-            if not draw_data or 'curent' not in draw_data:
+            if not draw_data or "curent" not in draw_data:
                 return False
 
-            current = draw_data['curent']
-            if not current or 'number' not in current:
+            current = draw_data["curent"]
+            if not current or "number" not in current:
                 return False
 
-            numbers = current['number']
+            numbers = current["number"]
             if len(numbers) != 3:
                 return False
 
             # 构造插入数据
             row = {
-                'issue': draw_data.get('long_issue'),
-                'timestamp': datetime.now().isoformat(),
-                'a': int(numbers[0]),
-                'b': int(numbers[1]),
-                'c': int(numbers[2]),
-                'sum': sum([int(n) for n in numbers]),
-                'source': 'api_realtime',
-                'created_at': datetime.now().isoformat()
+                "issue": draw_data.get("long_issue"),
+                "timestamp": datetime.now().isoformat(),
+                "a": int(numbers[0]),
+                "b": int(numbers[1]),
+                "c": int(numbers[2]),
+                "sum": sum([int(n) for n in numbers]),
+                "source": "api_realtime",
+                "created_at": datetime.now().isoformat(),
             }
 
             # 插入到draws_clean表
@@ -99,42 +101,53 @@ class PC28APIClient:
             logger.error(f"保存数据失败: {e}")
             return False
 
+
 api_client = PC28APIClient()
 
-@app.route('/fetch/draws')
+
+@app.route("/fetch/draws")
 async def fetch_draws():
     """获取并保存最新开奖数据"""
     try:
         draw_data = await api_client.get_latest_draw()
         if draw_data:
             success = api_client.save_to_bigquery(draw_data)
-            return jsonify({
-                'status': 'success' if success else 'failed',
-                'data': draw_data,
-                'saved': success
-            })
+            return jsonify(
+                {
+                    "status": "success" if success else "failed",
+                    "data": draw_data,
+                    "saved": success,
+                }
+            )
         else:
-            return jsonify({'status': 'no_data'}), 404
+            return jsonify({"status": "no_data"}), 404
     except Exception as e:
-        return jsonify({'status': 'error', 'error': str(e)}), 500
+        return jsonify({"status": "error", "error": str(e)}), 500
 
-@app.route('/health')
+
+@app.route("/health")
 def health():
     """健康检查"""
-    return jsonify({
-        'status': 'healthy',
-        'service': 'PC28 Realtime API',
-        'timestamp': datetime.now().isoformat()
-    })
+    return jsonify(
+        {
+            "status": "healthy",
+            "service": "PC28 Realtime API",
+            "timestamp": datetime.now().isoformat(),
+        }
+    )
 
-@app.route('/')
+
+@app.route("/")
 def home():
     """首页"""
-    return jsonify({
-        'message': 'PC28 Realtime API Service',
-        'endpoints': ['/fetch/draws', '/health']
-    })
+    return jsonify(
+        {
+            "message": "PC28 Realtime API Service",
+            "endpoints": ["/fetch/draws", "/health"],
+        }
+    )
+
 
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 8080))
-    app.run(host='0.0.0.0', port=port)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)

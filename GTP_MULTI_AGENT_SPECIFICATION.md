@@ -8,7 +8,7 @@
 ```
 生产环境三源数据完整:
 • cloud源: cloud_pred_today_norm, p_cloud_today_canon_v
-• map源:   p_map_today_canon_v, p_map_today_v  
+• map源:   p_map_today_canon_v, p_map_today_v
 • size源:  p_size_today_canon_v, p_size_today_v
 ```
 
@@ -21,46 +21,46 @@ def main_tick():
     cov = max(kpi.get("oe",{}).get("cov_w",0.0), kpi.get("size",{}).get("cov_w",0.0))
     acc_oe = kpi.get("oe",{}).get("acc",None)
     acc_sz = kpi.get("size",{}).get("acc",None)
-    
+
     # 2. PI控制器调整accept_floor
     pi = PIController(cfg)
     pi.set_mode(cfg["meta"].get("run_mode","balanced"))
     st = pi.step(cov=cov, acc=acc)
     cfg["voting"]["accept_floor"] = max(cfg["voting"]["accept_floor"], st["min_accept"])
-    
+
     # 3. 读取候选 (正EV视图)
     cands = bq.read_candidates()
     if not cands: return 0  # 无候选则只执行结算
-    
+
     # 4. 三源决策处理
     for r in cands:
         try:
             p_cloud = float(r.get("p_cloud"))
-            p_map = float(r.get("p_map")) 
+            p_map = float(r.get("p_map"))
             p_size = float(r.get("p_size"))
         except Exception:
             continue  # 跳过无效记录
-            
+
         # 5. 决策算法
         perf = {"cloud":0.0,"map":0.0,"size":0.0}  # 历史滚动表现
         dv = decide(p_cloud, p_map, p_size, cfg, perf)
         if not dv["accept"]: continue
-        
+
         # 6. 校准处理
         p_star = dv["p_star"]
         p_cal = calibrate(p_star, cfg) if cfg["calibration"]["enable"] else p_star
-        
+
         # 7. 风险计量
         ev = 2.0*p_cal - 1.0  # 基于1.95赔率
         if cfg["meta"]["only_ev_positive"] and ev<=0: continue
-        
+
         # 8. Kelly仓位计算
         kelly_frac = kelly_fraction(p_cal, cfg["risk"]["kelly_cap"])
         stake = calculate_stake(kelly_frac, cfg)
-        
+
         # 9. 下单执行
         place_order(r, p_cal, ev, kelly_frac, stake)
-    
+
     # 10. 结算处理
     settle_orders(env_config)
 ```
@@ -86,7 +86,7 @@ data_ingest_agent = {
 # 职责: 确保三源预测数据可用
 prediction_agent = {
     "cloud_source": "Vertex AI模型预测",
-    "map_source": "映射算法预测", 
+    "map_source": "映射算法预测",
     "size_source": "大小算法预测",
     "output_format": "p_cloud/p_map/p_size字段"
 }
@@ -201,7 +201,7 @@ calibration_agent = {
 #### Vertex AI模型职责 (生产预测)
 ```
 pc28-model-hit-combo-big-even:    大偶组合预测 -> p_cloud部分
-pc28-model-hit-combo-small-even:  小偶组合预测 -> p_cloud部分  
+pc28-model-hit-combo-small-even:  小偶组合预测 -> p_cloud部分
 pc28-model-hit-odd-even-even:     奇偶偶预测 -> p_cloud部分
 pc28-model-hit-odd-even-odd:      奇偶奇预测 -> p_cloud部分
 pc28-model-hit-size-small:        小号预测 -> p_size源
@@ -218,7 +218,7 @@ gpt-5:           高风险决策解释、复杂问题分析
 claude-4.1-opus: 逻辑推理验证、交叉检查
 gemini-2.5-pro:  多模态分析、图表解读
 deepseek-r1:     数学推理、统计分析
-qwen3-235b:      大规模上下文、历史分析  
+qwen3-235b:      大规模上下文、历史分析
 gemini-2.5-flash: 快速响应、实时监控
 ```
 

@@ -23,7 +23,7 @@ python3 aiml_api_complete_implementation.py
 
 # 预期输出:
 # ✅ 6个模型连接测试
-# 📊 成本和延迟统计  
+# 📊 成本和延迟统计
 # 🧠 PC28问题AI分析
 ```
 
@@ -39,21 +39,21 @@ models = {
         "use_case": "高风险决策解释、复杂推理"
     },
     "claude-4.1-opus": {
-        "provider": "Anthropic", 
+        "provider": "Anthropic",
         "cost": "$0.075/1k tokens",
         "max_tokens": 4000,
         "use_case": "逻辑推理验证、交叉检查"
     },
     "gemini-2.5-pro": {
         "provider": "Google",
-        "cost": "$0.035/1k tokens", 
+        "cost": "$0.035/1k tokens",
         "max_tokens": 3000,
         "use_case": "多模态分析、图表解读"
     },
     "deepseek-r1": {
         "provider": "DeepSeek",
         "cost": "$0.014/1k tokens",
-        "max_tokens": 4000, 
+        "max_tokens": 4000,
         "use_case": "数学推理、统计分析"
     },
     "qwen3-235b-a22b": {

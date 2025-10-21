@@ -16,7 +16,7 @@
 - 保持既有schema不改列
 ```
 
-#### 2. PC28-VIEW-FIX / PC28-VIEW-DEFINITION-FIX  
+#### 2. PC28-VIEW-FIX / PC28-VIEW-DEFINITION-FIX
 ```
 功能: 视图修复和定义修复
 实现: create_or_fix_views()
@@ -225,7 +225,7 @@ CHANGESETS/bin/make_artifact.sh            # 打包归档
 # 抬量15分钟
 bash CHANGESETS/bin/request_bridge.sh bucket_floor 0.33 15
 
-# 模式切换30分钟  
+# 模式切换30分钟
 bash CHANGESETS/bin/request_bridge.sh mode conservative 30
 
 # 参数微调

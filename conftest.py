@@ -32,4 +32,3 @@ if os.path.isdir(pkg_dir) and os.path.isfile(pkg_init):
                 sub_mod: ModuleType = importlib.util.module_from_spec(sub_spec)
                 sys.modules["production_system.modules"] = sub_mod
                 sub_spec.loader.exec_module(sub_mod)  # type: ignore[arg-type]
-

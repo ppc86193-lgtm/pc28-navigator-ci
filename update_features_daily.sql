@@ -4,7 +4,7 @@
                   -- 更新特征表
                   MERGE `wprojectl.pc28.features_daily` T
                   USING (
-                    SELECT 
+                    SELECT
                       DATE(timestamp, 'Asia/Shanghai') as feature_date,
                       COUNT(*) as draw_count,
                       AVG(a + b + c) as avg_sum,
@@ -25,4 +25,4 @@
                     S.feature_date, S.draw_count, S.avg_sum, S.big_ratio, CURRENT_TIMESTAMP()
                   );
                 END
-                
+

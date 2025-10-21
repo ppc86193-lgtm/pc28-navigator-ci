@@ -7,14 +7,14 @@ PC28 数据去重增强机制
 - 重复数据清理
 """
 
-import asyncio
-from datetime import datetime, timedelta
-from google.cloud import bigquery
-import logging
 import hashlib
-import json
+import logging
+from datetime import datetime
+
+from google.cloud import bigquery
 
 logger = logging.getLogger(__name__)
+
 
 class EnhancedDeduplication:
     """增强的数据去重机制"""
@@ -30,26 +30,26 @@ class EnhancedDeduplication:
             "composite_key": ["issue", "timestamp", "a", "b", "c"],  # 复合键去重
             "content_hash": ["a", "b", "c", "sum", "kjtime_raw"],  # 内容哈希去重
             "time_window": 300,  # 5分钟时间窗口内的重复检测
-            "batch_size": 100  # 批量处理大小
+            "batch_size": 100,  # 批量处理大小
         }
 
     def generate_content_hash(self, record):
         """生成内容哈希用于去重"""
         content_fields = [
-            str(record.get('issue', '')),
-            str(record.get('a', '')),
-            str(record.get('b', '')),
-            str(record.get('c', '')),
-            str(record.get('sum', '')),
-            str(record.get('kjtime_raw', ''))
+            str(record.get("issue", "")),
+            str(record.get("a", "")),
+            str(record.get("b", "")),
+            str(record.get("c", "")),
+            str(record.get("sum", "")),
+            str(record.get("kjtime_raw", "")),
         ]
-        content_string = '|'.join(content_fields)
+        content_string = "|".join(content_fields)
         return hashlib.sha256(content_string.encode()).hexdigest()[:16]
 
     async def check_duplicates_realtime(self, record):
         """实时去重检查 - 单条记录"""
         try:
-            issue = record.get('issue')
+            issue = record.get("issue")
             if not issue:
                 return {"is_duplicate": True, "reason": "missing_issue"}
 
@@ -66,7 +66,9 @@ class EnhancedDeduplication:
                 ]
             )
 
-            result = self.bq_client.query(primary_check_query, job_config=job_config).result()
+            result = self.bq_client.query(
+                primary_check_query, job_config=job_config
+            ).result()
             primary_stats = next(iter(result))
 
             if primary_stats.count > 0:
@@ -74,12 +76,16 @@ class EnhancedDeduplication:
                     "is_duplicate": True,
                     "reason": "primary_key_exists",
                     "existing_count": primary_stats.count,
-                    "latest_created": primary_stats.latest_created.isoformat() if primary_stats.latest_created else None
+                    "latest_created": (
+                        primary_stats.latest_created.isoformat()
+                        if primary_stats.latest_created
+                        else None
+                    ),
                 }
 
             # 2. 内容哈希去重检查 (防止数据变异后重复)
             content_hash = self.generate_content_hash(record)
-            timestamp = record.get('timestamp', datetime.now().isoformat())
+            timestamp = record.get("timestamp", datetime.now().isoformat())
 
             # 检查5分钟内的相似记录
             content_check_query = """
@@ -93,14 +99,18 @@ class EnhancedDeduplication:
             current_time = datetime.now().isoformat()
             content_job_config = bigquery.QueryJobConfig(
                 query_parameters=[
-                    bigquery.ScalarQueryParameter("a", "INTEGER", record.get('a')),
-                    bigquery.ScalarQueryParameter("b", "INTEGER", record.get('b')),
-                    bigquery.ScalarQueryParameter("c", "INTEGER", record.get('c')),
-                    bigquery.ScalarQueryParameter("current_time", "TIMESTAMP", current_time)
+                    bigquery.ScalarQueryParameter("a", "INTEGER", record.get("a")),
+                    bigquery.ScalarQueryParameter("b", "INTEGER", record.get("b")),
+                    bigquery.ScalarQueryParameter("c", "INTEGER", record.get("c")),
+                    bigquery.ScalarQueryParameter(
+                        "current_time", "TIMESTAMP", current_time
+                    ),
                 ]
             )
 
-            content_result = self.bq_client.query(content_check_query, content_job_config).result()
+            content_result = self.bq_client.query(
+                content_check_query, content_job_config
+            ).result()
             content_stats = next(iter(content_result))
 
             if content_stats.count > 0:
@@ -108,8 +118,12 @@ class EnhancedDeduplication:
                     "is_duplicate": True,
                     "reason": "content_similarity",
                     "similar_issue": content_stats.issue,
-                    "similar_timestamp": content_stats.timestamp.isoformat() if content_stats.timestamp else None,
-                    "content_hash": content_hash
+                    "similar_timestamp": (
+                        content_stats.timestamp.isoformat()
+                        if content_stats.timestamp
+                        else None
+                    ),
+                    "content_hash": content_hash,
                 }
 
             # 3. 时间窗口逻辑检查
@@ -123,22 +137,28 @@ class EnhancedDeduplication:
 
             time_job_config = bigquery.QueryJobConfig(
                 query_parameters=[
-                    bigquery.ScalarQueryParameter("record_time", "TIMESTAMP", timestamp),
-                    bigquery.ScalarQueryParameter("issue", "STRING", str(issue))
+                    bigquery.ScalarQueryParameter(
+                        "record_time", "TIMESTAMP", timestamp
+                    ),
+                    bigquery.ScalarQueryParameter("issue", "STRING", str(issue)),
                 ]
             )
 
-            time_result = self.bq_client.query(time_window_query, time_job_config).result()
+            time_result = self.bq_client.query(
+                time_window_query, time_job_config
+            ).result()
             time_stats = next(iter(time_result))
 
             if time_stats.count > 0:
-                logger.warning(f"时间窗口内发现其他期号 {time_stats.issue}，可能存在时序问题")
+                logger.warning(
+                    f"时间窗口内发现其他期号 {time_stats.issue}，可能存在时序问题"
+                )
 
             return {
                 "is_duplicate": False,
                 "reason": "unique_record",
                 "content_hash": content_hash,
-                "validation": "passed"
+                "validation": "passed",
             }
 
         except Exception as e:
@@ -152,13 +172,13 @@ class EnhancedDeduplication:
                 return []
 
             # 提取所有期号进行批量查询
-            issues = [str(r.get('issue', '')) for r in records if r.get('issue')]
+            issues = [str(r.get("issue", "")) for r in records if r.get("issue")]
 
             if not issues:
                 return []
 
             # 批量查询已存在的期号
-            placeholders = ','.join([f"'{issue}'" for issue in issues])
+            placeholders = ",".join([f"'{issue}'" for issue in issues])
             batch_query = f"""
             SELECT DISTINCT issue FROM `wprojectl.pc28.draws_clean`
             WHERE issue IN ({placeholders})
@@ -172,21 +192,25 @@ class EnhancedDeduplication:
             duplicate_info = []
 
             for record in records:
-                issue = str(record.get('issue', ''))
+                issue = str(record.get("issue", ""))
 
                 if issue in existing_issues:
-                    duplicate_info.append({
-                        "issue": issue,
-                        "reason": "already_exists",
-                        "action": "skipped"
-                    })
+                    duplicate_info.append(
+                        {
+                            "issue": issue,
+                            "reason": "already_exists",
+                            "action": "skipped",
+                        }
+                    )
                 else:
                     # 添加去重元数据
-                    record['content_hash'] = self.generate_content_hash(record)
-                    record['dedup_timestamp'] = datetime.now().isoformat()
+                    record["content_hash"] = self.generate_content_hash(record)
+                    record["dedup_timestamp"] = datetime.now().isoformat()
                     new_records.append(record)
 
-            logger.info(f"批量去重: {len(records)} -> {len(new_records)} (过滤 {len(duplicate_info)} 个重复)")
+            logger.info(
+                f"批量去重: {len(records)} -> {len(new_records)} (过滤 {len(duplicate_info)} 个重复)"
+            )
 
             return {
                 "new_records": new_records,
@@ -195,8 +219,8 @@ class EnhancedDeduplication:
                     "total_input": len(records),
                     "unique_records": len(new_records),
                     "duplicates_filtered": len(duplicate_info),
-                    "deduplication_ratio": f"{len(duplicate_info)/len(records)*100:.1f}%"
-                }
+                    "deduplication_ratio": f"{len(duplicate_info)/len(records)*100:.1f}%",
+                },
             }
 
         except Exception as e:
@@ -221,7 +245,7 @@ class EnhancedDeduplication:
                     FROM `wprojectl.pc28.draws_clean`
                 )
                 WHERE row_num = 1
-            """
+            """,
         }
 
     async def cleanup_existing_duplicates(self, dry_run=True):
@@ -258,7 +282,7 @@ class EnhancedDeduplication:
                 return {
                     "status": "no_duplicates",
                     "message": "未发现重复记录",
-                    "total_duplicates": 0
+                    "total_duplicates": 0,
                 }
 
             cleanup_plan = []
@@ -266,15 +290,17 @@ class EnhancedDeduplication:
 
             for dup in duplicates:
                 total_to_delete += dup.delete_count
-                cleanup_plan.append({
-                    "issue": dup.issue,
-                    "duplicate_count": dup.dup_count,
-                    "keep_version": {
-                        "timestamp": dup.keep_timestamp.isoformat(),
-                        "source": dup.keep_source
-                    },
-                    "will_delete": dup.delete_count
-                })
+                cleanup_plan.append(
+                    {
+                        "issue": dup.issue,
+                        "duplicate_count": dup.dup_count,
+                        "keep_version": {
+                            "timestamp": dup.keep_timestamp.isoformat(),
+                            "source": dup.keep_source,
+                        },
+                        "will_delete": dup.delete_count,
+                    }
+                )
 
             if dry_run:
                 return {
@@ -282,7 +308,7 @@ class EnhancedDeduplication:
                     "cleanup_plan": cleanup_plan,
                     "total_duplicates": len(duplicates),
                     "total_records_to_delete": total_to_delete,
-                    "message": "这是预览模式，没有实际删除数据"
+                    "message": "这是预览模式，没有实际删除数据",
                 }
 
             # 2. 执行清理 (如果不是dry_run)
@@ -296,19 +322,27 @@ class EnhancedDeduplication:
 
                 delete_config = bigquery.QueryJobConfig(
                     query_parameters=[
-                        bigquery.ScalarQueryParameter("issue", "STRING", dup_info["issue"]),
-                        bigquery.ScalarQueryParameter("keep_timestamp", "TIMESTAMP", dup_info["keep_version"]["timestamp"])
+                        bigquery.ScalarQueryParameter(
+                            "issue", "STRING", dup_info["issue"]
+                        ),
+                        bigquery.ScalarQueryParameter(
+                            "keep_timestamp",
+                            "TIMESTAMP",
+                            dup_info["keep_version"]["timestamp"],
+                        ),
                     ]
                 )
 
-                delete_result = self.bq_client.query(delete_query, delete_config).result()
+                delete_result = self.bq_client.query(
+                    delete_query, delete_config
+                ).result()
                 deleted_count += dup_info["will_delete"]
 
             return {
                 "status": "cleanup_completed",
                 "deleted_records": deleted_count,
                 "cleaned_issues": len(cleanup_plan),
-                "message": f"成功清理 {deleted_count} 条重复记录"
+                "message": f"成功清理 {deleted_count} 条重复记录",
             }
 
         except Exception as e:
@@ -330,7 +364,6 @@ class EnhancedDeduplication:
                 GROUP BY DATE(timestamp)
                 ORDER BY date DESC
             """,
-
             "source_duplication_analysis": """
                 SELECT
                     source,
@@ -342,7 +375,6 @@ class EnhancedDeduplication:
                 GROUP BY source
                 ORDER BY uniqueness_ratio ASC
             """,
-
             "time_gap_analysis": """
                 WITH time_gaps AS (
                     SELECT
@@ -362,7 +394,7 @@ class EnhancedDeduplication:
                     COUNT(CASE WHEN gap_seconds > 240 THEN 1 END) as too_sparse_count
                 FROM time_gaps
                 WHERE gap_seconds IS NOT NULL
-            """
+            """,
         }
 
     async def enhanced_insert_with_deduplication(self, record):
@@ -372,21 +404,25 @@ class EnhancedDeduplication:
             dup_check = await self.check_duplicates_realtime(record)
 
             if dup_check["is_duplicate"]:
-                logger.info(f"跳过重复记录 {record.get('issue')}: {dup_check['reason']}")
+                logger.info(
+                    f"跳过重复记录 {record.get('issue')}: {dup_check['reason']}"
+                )
                 return {
                     "status": "duplicate_skipped",
-                    "issue": record.get('issue'),
+                    "issue": record.get("issue"),
                     "reason": dup_check["reason"],
-                    "details": dup_check
+                    "details": dup_check,
                 }
 
             # 2. 添加去重元数据
             enhanced_record = record.copy()
-            enhanced_record.update({
-                'content_hash': dup_check.get('content_hash'),
-                'dedup_checked': True,
-                'dedup_timestamp': datetime.now().isoformat()
-            })
+            enhanced_record.update(
+                {
+                    "content_hash": dup_check.get("content_hash"),
+                    "dedup_checked": True,
+                    "dedup_timestamp": datetime.now().isoformat(),
+                }
+            )
 
             # 3. 执行插入
             return await self._safe_insert(enhanced_record)
@@ -410,26 +446,50 @@ class EnhancedDeduplication:
 
             job_config = bigquery.QueryJobConfig(
                 query_parameters=[
-                    bigquery.ScalarQueryParameter("issue", "STRING", record['issue']),
-                    bigquery.ScalarQueryParameter("timestamp", "TIMESTAMP", record['timestamp']),
-                    bigquery.ScalarQueryParameter("a", "INTEGER", record['a']),
-                    bigquery.ScalarQueryParameter("b", "INTEGER", record['b']),
-                    bigquery.ScalarQueryParameter("c", "INTEGER", record['c']),
-                    bigquery.ScalarQueryParameter("sum", "INTEGER", record['sum']),
-                    bigquery.ScalarQueryParameter("tail", "INTEGER", record['tail']),
-                    bigquery.ScalarQueryParameter("size", "STRING", record['size']),
-                    bigquery.ScalarQueryParameter("odd_even", "STRING", record['odd_even']),
-                    bigquery.ScalarQueryParameter("patterns", "STRING", record['patterns']),
-                    bigquery.ScalarQueryParameter("source", "STRING", record['source']),
-                    bigquery.ScalarQueryParameter("created_at", "TIMESTAMP", record['created_at']),
-                    bigquery.ScalarQueryParameter("api_codeid", "INTEGER", record.get('api_codeid')),
-                    bigquery.ScalarQueryParameter("api_message", "STRING", record.get('api_message', '')),
-                    bigquery.ScalarQueryParameter("api_curtime", "INTEGER", record.get('api_curtime')),
-                    bigquery.ScalarQueryParameter("kjtime_raw", "STRING", record.get('kjtime_raw')),
-                    bigquery.ScalarQueryParameter("next_issue", "STRING", record.get('next_issue', '')),
-                    bigquery.ScalarQueryParameter("next_time", "STRING", record.get('next_time')),
-                    bigquery.ScalarQueryParameter("award_time", "INTEGER", record.get('award_time')),
-                    bigquery.ScalarQueryParameter("raw_api_response", "STRING", record.get('raw_api_response', '')),
+                    bigquery.ScalarQueryParameter("issue", "STRING", record["issue"]),
+                    bigquery.ScalarQueryParameter(
+                        "timestamp", "TIMESTAMP", record["timestamp"]
+                    ),
+                    bigquery.ScalarQueryParameter("a", "INTEGER", record["a"]),
+                    bigquery.ScalarQueryParameter("b", "INTEGER", record["b"]),
+                    bigquery.ScalarQueryParameter("c", "INTEGER", record["c"]),
+                    bigquery.ScalarQueryParameter("sum", "INTEGER", record["sum"]),
+                    bigquery.ScalarQueryParameter("tail", "INTEGER", record["tail"]),
+                    bigquery.ScalarQueryParameter("size", "STRING", record["size"]),
+                    bigquery.ScalarQueryParameter(
+                        "odd_even", "STRING", record["odd_even"]
+                    ),
+                    bigquery.ScalarQueryParameter(
+                        "patterns", "STRING", record["patterns"]
+                    ),
+                    bigquery.ScalarQueryParameter("source", "STRING", record["source"]),
+                    bigquery.ScalarQueryParameter(
+                        "created_at", "TIMESTAMP", record["created_at"]
+                    ),
+                    bigquery.ScalarQueryParameter(
+                        "api_codeid", "INTEGER", record.get("api_codeid")
+                    ),
+                    bigquery.ScalarQueryParameter(
+                        "api_message", "STRING", record.get("api_message", "")
+                    ),
+                    bigquery.ScalarQueryParameter(
+                        "api_curtime", "INTEGER", record.get("api_curtime")
+                    ),
+                    bigquery.ScalarQueryParameter(
+                        "kjtime_raw", "STRING", record.get("kjtime_raw")
+                    ),
+                    bigquery.ScalarQueryParameter(
+                        "next_issue", "STRING", record.get("next_issue", "")
+                    ),
+                    bigquery.ScalarQueryParameter(
+                        "next_time", "STRING", record.get("next_time")
+                    ),
+                    bigquery.ScalarQueryParameter(
+                        "award_time", "INTEGER", record.get("award_time")
+                    ),
+                    bigquery.ScalarQueryParameter(
+                        "raw_api_response", "STRING", record.get("raw_api_response", "")
+                    ),
                 ]
             )
 
@@ -437,14 +497,15 @@ class EnhancedDeduplication:
 
             return {
                 "status": "inserted",
-                "issue": record['issue'],
-                "content_hash": record.get('content_hash'),
-                "inserted_at": datetime.now().isoformat()
+                "issue": record["issue"],
+                "content_hash": record.get("content_hash"),
+                "inserted_at": datetime.now().isoformat(),
             }
 
         except Exception as e:
             logger.error(f"安全插入失败: {e}")
             return {"status": "insert_failed", "error": str(e)}
+
 
 # 使用示例
 def get_deduplication_recommendations():
@@ -474,6 +535,7 @@ def get_deduplication_recommendations():
     - 去重检查耗时 < 100ms
     - 数据完整性 > 99.9%
     """
+
 
 if __name__ == "__main__":
     dedup = EnhancedDeduplication()

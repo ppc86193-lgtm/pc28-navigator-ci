@@ -103,7 +103,11 @@ class ProductionFrequencyModule:
         odd_even_gap = abs(h["odd_ratio"] - a["odd_ratio"]) + abs(h["even_ratio"] - a["even_ratio"])  # type: ignore[index]
 
         trap_analysis = {
-            "overall_strength": 0 if (big_small_gap == 0 and odd_even_gap == 0) else max(big_small_gap, odd_even_gap),
+            "overall_strength": (
+                0
+                if (big_small_gap == 0 and odd_even_gap == 0)
+                else max(big_small_gap, odd_even_gap)
+            ),
             "big_small_contribution": 0 if big_small_gap == 0 else big_small_gap,
             "odd_even_contribution": 0 if odd_even_gap == 0 else odd_even_gap,
         }
@@ -111,4 +115,3 @@ class ProductionFrequencyModule:
         return {
             "trap_analysis": trap_analysis,
         }
-

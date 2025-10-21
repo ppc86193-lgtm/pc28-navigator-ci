@@ -161,7 +161,7 @@ def advanced_feature_engineering(df):
     df['consecutive_large'] = df['size'].eq('large').groupby((df['size'] != df['size'].shift()).cumsum()).cumsum()
 
     # 时间位置特征
-    
+
     df['hour_position'] = df.groupby(df['timestamp'].dt.hour).cumcount() + 1
 
     # 和值区间概率

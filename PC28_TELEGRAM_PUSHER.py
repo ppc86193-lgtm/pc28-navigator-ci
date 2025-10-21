@@ -5,25 +5,29 @@ PC28 Telegram 实时推送系统
 支持开奖结果和预测结果的实时推送
 """
 
-import requests
-import json
-import time
-from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional
 import logging
+import time
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from typing import Dict, List
+
+import requests
 
 # Telegram Bot 配置
 BOT_TOKEN = "8094025881:AAF-7fv6djS0Z8QcgHwHloGSVguXj8XXEC0"
 CHAT_ID = "8420412156"  # 小财神
 
 # 配置日志
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class DrawResult:
     """开奖结果数据类"""
+
     issue: str
     timestamp: str
     a: int
@@ -34,15 +38,18 @@ class DrawResult:
     size: str
     odd_even: str
 
+
 @dataclass
 class PredictionResult:
     """预测结果数据类"""
+
     issue: str
     timestamp: str
     prediction_type: str
     prediction: str
     confidence: float
     model_name: str
+
 
 class TelegramPusher:
     """Telegram推送类"""
@@ -56,11 +63,7 @@ class TelegramPusher:
         """发送消息到Telegram"""
         try:
             url = f"{self.base_url}/sendMessage"
-            data = {
-                "chat_id": self.chat_id,
-                "text": text,
-                "parse_mode": parse_mode
-            }
+            data = {"chat_id": self.chat_id, "text": text, "parse_mode": parse_mode}
 
             response = requests.post(url, data=data, timeout=10)
             response.raise_for_status()
@@ -71,6 +74,7 @@ class TelegramPusher:
         except Exception as e:
             logger.error(f"消息发送失败: {e}")
             return False
+
 
 class MessageTemplates:
     """消息模板类"""
@@ -123,7 +127,11 @@ class MessageTemplates:
         size_predictions = [p for p in predictions if p.prediction_type == "size"]
         if size_predictions:
             best_size = max(size_predictions, key=lambda x: x.confidence)
-            confidence_icon = "🟢" if best_size.confidence >= 0.7 else "🟡" if best_size.confidence >= 0.6 else "🔴"
+            confidence_icon = (
+                "🟢"
+                if best_size.confidence >= 0.7
+                else "🟡" if best_size.confidence >= 0.6 else "🔴"
+            )
             template += f"""
 📏 *大小预测*: {confidence_icon}
 预测结果: *{best_size.prediction}*
@@ -133,10 +141,16 @@ class MessageTemplates:
 """
 
         # 单双预测
-        oddeven_predictions = [p for p in predictions if p.prediction_type == "odd_even"]
+        oddeven_predictions = [
+            p for p in predictions if p.prediction_type == "odd_even"
+        ]
         if oddeven_predictions:
             best_oddeven = max(oddeven_predictions, key=lambda x: x.confidence)
-            confidence_icon = "🟢" if best_oddeven.confidence >= 0.7 else "🟡" if best_oddeven.confidence >= 0.6 else "🔴"
+            confidence_icon = (
+                "🟢"
+                if best_oddeven.confidence >= 0.7
+                else "🟡" if best_oddeven.confidence >= 0.6 else "🔴"
+            )
             template += f"""
 🎯 *单双预测*: {confidence_icon}
 预测结果: *{best_oddeven.prediction}*
@@ -190,15 +204,12 @@ class MessageTemplates:
         return template
 
     @staticmethod
-    def system_alert_template(alert_type: str, message: str, severity: str = "INFO") -> str:
+    def system_alert_template(
+        alert_type: str, message: str, severity: str = "INFO"
+    ) -> str:
         """系统告警模板"""
 
-        severity_icons = {
-            "INFO": "ℹ️",
-            "WARN": "⚠️",
-            "ERROR": "🚨",
-            "CRITICAL": "🔥"
-        }
+        severity_icons = {"INFO": "ℹ️", "WARN": "⚠️", "ERROR": "🚨", "CRITICAL": "🔥"}
 
         icon = severity_icons.get(severity, "ℹ️")
         beijing_time = datetime.now(timezone(timedelta(hours=8)))
@@ -219,6 +230,7 @@ class MessageTemplates:
 """
         return template
 
+
 class PC28TelegramBot:
     """PC28 Telegram Bot主类"""
 
@@ -230,15 +242,15 @@ class PC28TelegramBot:
         """推送开奖结果"""
         try:
             draw = DrawResult(
-                issue=draw_data.get('issue', ''),
-                timestamp=draw_data.get('timestamp', ''),
-                a=draw_data.get('a', 0),
-                b=draw_data.get('b', 0),
-                c=draw_data.get('c', 0),
-                sum_value=draw_data.get('sum', 0),
-                tail=draw_data.get('tail', 0),
-                size=draw_data.get('size', ''),
-                odd_even=draw_data.get('odd_even', '')
+                issue=draw_data.get("issue", ""),
+                timestamp=draw_data.get("timestamp", ""),
+                a=draw_data.get("a", 0),
+                b=draw_data.get("b", 0),
+                c=draw_data.get("c", 0),
+                sum_value=draw_data.get("sum", 0),
+                tail=draw_data.get("tail", 0),
+                size=draw_data.get("size", ""),
+                odd_even=draw_data.get("odd_even", ""),
             )
 
             message = self.templates.draw_result_template(draw)
@@ -254,12 +266,12 @@ class PC28TelegramBot:
             predictions = []
             for pred_data in predictions_data:
                 prediction = PredictionResult(
-                    issue=pred_data.get('issue', ''),
-                    timestamp=pred_data.get('timestamp', ''),
-                    prediction_type=pred_data.get('type', ''),
-                    prediction=pred_data.get('prediction', ''),
-                    confidence=pred_data.get('confidence', 0.0),
-                    model_name=pred_data.get('model', '')
+                    issue=pred_data.get("issue", ""),
+                    timestamp=pred_data.get("timestamp", ""),
+                    prediction_type=pred_data.get("type", ""),
+                    prediction=pred_data.get("prediction", ""),
+                    confidence=pred_data.get("confidence", 0.0),
+                    model_name=pred_data.get("model", ""),
                 )
                 predictions.append(prediction)
 
@@ -280,15 +292,20 @@ class PC28TelegramBot:
             logger.error(f"推送准确率报告失败: {e}")
             return False
 
-    def push_system_alert(self, alert_type: str, message: str, severity: str = "INFO") -> bool:
+    def push_system_alert(
+        self, alert_type: str, message: str, severity: str = "INFO"
+    ) -> bool:
         """推送系统告警"""
         try:
-            alert_message = self.templates.system_alert_template(alert_type, message, severity)
+            alert_message = self.templates.system_alert_template(
+                alert_type, message, severity
+            )
             return self.pusher.send_message(alert_message)
 
         except Exception as e:
             logger.error(f"推送系统告警失败: {e}")
             return False
+
 
 def test_telegram_bot():
     """测试Telegram Bot功能"""
@@ -296,51 +313,51 @@ def test_telegram_bot():
 
     # 测试开奖结果推送
     test_draw = {
-        'issue': '20250919001',
-        'timestamp': '2025-09-19 05:30:00',
-        'a': 3,
-        'b': 7,
-        'c': 2,
-        'sum': 12,
-        'tail': 2,
-        'size': '小',
-        'odd_even': '偶'
+        "issue": "20250919001",
+        "timestamp": "2025-09-19 05:30:00",
+        "a": 3,
+        "b": 7,
+        "c": 2,
+        "sum": 12,
+        "tail": 2,
+        "size": "小",
+        "odd_even": "偶",
     }
 
     # 测试预测结果推送
     test_predictions = [
         {
-            'issue': '20250919002',
-            'timestamp': '2025-09-19 05:33:00',
-            'type': 'size',
-            'prediction': '大',
-            'confidence': 0.72,
-            'model': 'pred_size_simple'
+            "issue": "20250919002",
+            "timestamp": "2025-09-19 05:33:00",
+            "type": "size",
+            "prediction": "大",
+            "confidence": 0.72,
+            "model": "pred_size_simple",
         },
         {
-            'issue': '20250919002',
-            'timestamp': '2025-09-19 05:33:00',
-            'type': 'odd_even',
-            'prediction': '奇',
-            'confidence': 0.68,
-            'model': 'pred_oddeven_simple'
-        }
+            "issue": "20250919002",
+            "timestamp": "2025-09-19 05:33:00",
+            "type": "odd_even",
+            "prediction": "奇",
+            "confidence": 0.68,
+            "model": "pred_oddeven_simple",
+        },
     ]
 
     # 测试系统状态报告
     test_stats = {
-        'date': '2025-09-19',
-        'size_accuracy': 0.745,
-        'size_count': 134,
-        'oddeven_accuracy': 0.723,
-        'oddeven_count': 134,
-        'overall_accuracy': 0.734,
-        'gate_pass_rate': 0.8881,
-        'active_models': 5,
-        'monitoring_coverage': 1.0,
-        'last_update': '05:30:00',
-        'data_integrity': 1.0,
-        'system_status': 'L4自动驾驶'
+        "date": "2025-09-19",
+        "size_accuracy": 0.745,
+        "size_count": 134,
+        "oddeven_accuracy": 0.723,
+        "oddeven_count": 134,
+        "overall_accuracy": 0.734,
+        "gate_pass_rate": 0.8881,
+        "active_models": 5,
+        "monitoring_coverage": 1.0,
+        "last_update": "05:30:00",
+        "data_integrity": 1.0,
+        "system_status": "L4自动驾驶",
     }
 
     print("🚀 开始测试Telegram推送...")
@@ -364,10 +381,13 @@ def test_telegram_bot():
     time.sleep(2)
 
     # 测试系统告警
-    success4 = bot.push_system_alert("ACCURACY_RECOVERY", "准确率恢复流程已启动，切换到Conservative模式", "WARN")
+    success4 = bot.push_system_alert(
+        "ACCURACY_RECOVERY", "准确率恢复流程已启动，切换到Conservative模式", "WARN"
+    )
     print(f"系统告警推送: {'✅' if success4 else '❌'}")
 
     return all([success1, success2, success3, success4])
+
 
 if __name__ == "__main__":
     # 运行测试

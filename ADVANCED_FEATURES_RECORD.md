@@ -28,10 +28,10 @@ cov_60m = orders_60m / draws_60m
 acc_60m = wins / (wins + losses)
 
 -- 实时监控指标
-SELECT 
+SELECT
   market,
   n_orders,
-  n_settled, 
+  n_settled,
   coverage_rate,
   accuracy,
   brier_score,
@@ -108,7 +108,7 @@ performance_metrics = {
     "coverage_trend": "覆盖率趋势",
     "coverage_volatility": "覆盖率波动性"
   },
-  
+
   "accuracy_metrics": {
     "current_accuracy": "当前准确率",
     "target_accuracy": "目标准确率80%",
@@ -116,14 +116,14 @@ performance_metrics = {
     "brier_score": "Brier评分",
     "calibration_error": "校准误差"
   },
-  
+
   "risk_metrics": {
     "current_ev": "当前期望收益",
     "kelly_utilization": "Kelly系数利用率",
     "max_drawdown": "最大回撤",
     "sharpe_ratio": "夏普比率"
   },
-  
+
   "system_metrics": {
     "pi_controller_status": "PI控制器状态",
     "autoswitch_mode": "AutoSwitch模式",
@@ -140,7 +140,7 @@ performance_metrics = {
 # 外部请求文件监控
 request_files = {
   "bucket_floor_request.json": "阈值调整请求",
-  "mode_switch_request.json": "模式切换请求", 
+  "mode_switch_request.json": "模式切换请求",
   "param_tweak_request.json": "参数微调请求"
 }
 
@@ -149,7 +149,7 @@ def check_request_ttl(request_data):
     current_time = time.time()
     request_time = request_data.get("ts", 0)
     ttl_seconds = request_data.get("ttl_sec", 0)
-    
+
     return (current_time - request_time) < ttl_seconds
 ```
 
@@ -161,7 +161,7 @@ def detect_config_changes():
         "CHANGESETS/config/pc28_enhanced_config.yaml",
         "CHANGESETS/config/auto_smart_switch.yaml"
     ]
-    
+
     for config_file in config_files:
         if file_modified_since_last_check(config_file):
             reload_config(config_file)
@@ -231,22 +231,22 @@ restore_verification = {
 def decide(p_cloud, p_map, p_size, cfg, perf):
     # 三源权重动态调整
     weights = update_weights_based_on_performance(perf)
-    
+
     # 加权平均
-    p_star = (weights["cloud"] * p_cloud + 
-              weights["map"] * p_map + 
+    p_star = (weights["cloud"] * p_cloud +
+              weights["map"] * p_map +
               weights["size"] * p_size)
-    
+
     # 极端值门控
     if p_star >= cfg["voting"]["extreme_gate"]["hi"]:
         p_star = cfg["voting"]["extreme_gate"]["hi"]
     elif p_star <= cfg["voting"]["extreme_gate"]["lo"]:
         p_star = cfg["voting"]["extreme_gate"]["lo"]
-    
+
     # 阈值检查
     accept_threshold = cfg["voting"]["accept_floor"]
     accept = p_star >= accept_threshold
-    
+
     return {
         "p_star": p_star,
         "accept": accept,
@@ -260,19 +260,19 @@ def decide(p_cloud, p_map, p_size, cfg, perf):
 def apply_hybrid_calibration(p_star, segment_key, calibration_params):
     # 获取分段参数
     segment_params = calibration_params.get(segment_key, {"a": 1.0, "b": 0.0, "T": 1.0})
-    
+
     # Platt校准
     def logit(p): return math.log(p / (1 - p + 1e-9))
     def inv_logit(x): return 1 / (1 + math.exp(-x))
-    
+
     platt_result = inv_logit(segment_params["a"] * logit(p_star) + segment_params["b"])
-    
+
     # 温度校准
     temp_result = inv_logit(logit(p_star) / segment_params["T"])
-    
+
     # 混合策略
     calibrated_p = 0.7 * platt_result + 0.3 * temp_result
-    
+
     return max(1e-6, min(1-1e-6, calibrated_p))
 ```
 

@@ -5,22 +5,24 @@ PC28 Telegram测试推送
 """
 
 import asyncio
-import aiohttp
 import json
 from datetime import datetime
 
+import aiohttp
+
+
 class PC28TelegramTestPush:
     """PC28 Telegram测试推送"""
-    
+
     def __init__(self):
         self.bot_token = "8094025881:AAF-7fv6djS0Z8QcgHwHloGSVguXj8XXEC0"
         self.chat_id = "8420412156"  # 项目总指挥大人"小财神"
         self.telegram_api = f"https://api.telegram.org/bot{self.bot_token}"
-        
+
         print("📱 PC28 Telegram测试推送启动")
         print("👑 目标: 项目总指挥大人'小财神'")
         print("🎯 任务: 发送测试消息验证Bot功能")
-    
+
     async def send_message(self, text, parse_mode="Markdown"):
         """发送消息"""
         async with aiohttp.ClientSession() as session:
@@ -29,31 +31,34 @@ class PC28TelegramTestPush:
                 payload = {
                     "chat_id": self.chat_id,
                     "text": text,
-                    "parse_mode": parse_mode
+                    "parse_mode": parse_mode,
                 }
-                
+
                 async with session.post(url, json=payload) as response:
                     if response.status == 200:
                         result = await response.json()
-                        
-                        if result.get('ok'):
-                            print(f"   ✅ 消息发送成功")
-                            return {"success": True, "message_id": result['result']['message_id']}
+
+                        if result.get("ok"):
+                            print("   ✅ 消息发送成功")
+                            return {
+                                "success": True,
+                                "message_id": result["result"]["message_id"],
+                            }
                         else:
                             print(f"   ❌ 消息发送失败: {result}")
                             return {"success": False, "error": result}
                     else:
                         print(f"   ❌ HTTP请求失败: {response.status}")
                         return {"success": False, "error": f"HTTP {response.status}"}
-                        
+
             except Exception as e:
                 print(f"   ❌ 发送异常: {e}")
                 return {"success": False, "error": str(e)}
-    
+
     async def send_welcome_message(self):
         """发送欢迎消息"""
-        print(f"\n📱 发送欢迎消息...")
-        
+        print("\n📱 发送欢迎消息...")
+
         welcome_text = f"""🎉 **PC28监控Bot启动成功！**
 
 👑 尊敬的项目总指挥大人"小财神"，您好！
@@ -86,13 +91,13 @@ class PC28TelegramTestPush:
 Bot将自动为您推送重要信息，无需手动查询！
 
 🎪 **PC28系统为您服务！**"""
-        
+
         return await self.send_message(welcome_text)
-    
+
     async def send_system_status(self):
         """发送系统状态"""
-        print(f"\n📊 发送系统状态...")
-        
+        print("\n📊 发送系统状态...")
+
         status_text = f"""📊 **PC28系统状态报告**
 
 👑 项目总指挥大人"小财神"
@@ -123,13 +128,13 @@ Bot将自动为您推送重要信息，无需手动查询！
 📈 建立KPI监控
 
 👑 **您的专属PC28系统正在为您服务！**"""
-        
+
         return await self.send_message(status_text)
-    
+
     async def send_mock_prediction(self):
         """发送模拟预测（测试用）"""
-        print(f"\n🎯 发送模拟预测...")
-        
+        print("\n🎯 发送模拟预测...")
+
         prediction_text = f"""🎯 **PC28预测推送** (测试)
 
 📅 **预测时间:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
@@ -154,9 +159,9 @@ Bot将自动为您推送重要信息，无需手动查询！
 Agent们正在云端努力工作中...
 
 👑 **为项目总指挥大人"小财神"专属服务！**"""
-        
+
         return await self.send_message(prediction_text)
-    
+
     async def execute_test_push(self):
         """执行测试推送"""
         print("📱 PC28 Telegram测试推送执行")
@@ -165,23 +170,23 @@ Agent们正在云端努力工作中...
         print("📱 Chat ID: 8420412156")
         print("🎯 任务: 验证Bot推送功能")
         print()
-        
+
         test_start = datetime.now()
-        
+
         # 1. 发送欢迎消息
         welcome_result = await self.send_welcome_message()
         await asyncio.sleep(2)  # 间隔2秒
-        
+
         # 2. 发送系统状态
         status_result = await self.send_system_status()
         await asyncio.sleep(2)  # 间隔2秒
-        
+
         # 3. 发送模拟预测
         prediction_result = await self.send_mock_prediction()
-        
+
         test_end = datetime.now()
         test_duration = (test_end - test_start).total_seconds()
-        
+
         # 生成测试报告
         test_report = {
             "test_timestamp": test_end.isoformat(),
@@ -192,45 +197,55 @@ Agent们正在云端努力工作中...
             "welcome_message": welcome_result,
             "status_message": status_result,
             "prediction_message": prediction_result,
-            "messages_sent": sum([1 for r in [welcome_result, status_result, prediction_result] if r.get('success')]),
-            "test_status": "COMPLETED"
+            "messages_sent": sum(
+                [
+                    1
+                    for r in [welcome_result, status_result, prediction_result]
+                    if r.get("success")
+                ]
+            ),
+            "test_status": "COMPLETED",
         }
-        
+
         # 保存测试报告
-        report_file = f"telegram_test_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        with open(report_file, 'w', encoding='utf-8') as f:
+        report_file = (
+            f"telegram_test_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
+        with open(report_file, "w", encoding="utf-8") as f:
             json.dump(test_report, f, indent=2, ensure_ascii=False)
-        
-        print(f"\n🏆 Telegram测试推送完成！")
+
+        print("\n🏆 Telegram测试推送完成！")
         print(f"   测试时长: {test_duration:.1f}秒")
         print(f"   消息发送: {test_report['messages_sent']}/3")
         print(f"   目标用户: {test_report['target_user']}")
         print(f"   📄 测试报告: {report_file}")
-        
-        success_count = test_report['messages_sent']
+
+        success_count = test_report["messages_sent"]
         if success_count == 3:
-            print(f"\n👑 向项目总指挥大人汇报:")
-            print(f"   🎉 所有测试消息发送成功！")
-            print(f"   📱 请查看您的Telegram！")
-            print(f"   🤖 Bot推送功能完全正常！")
+            print("\n👑 向项目总指挥大人汇报:")
+            print("   🎉 所有测试消息发送成功！")
+            print("   📱 请查看您的Telegram！")
+            print("   🤖 Bot推送功能完全正常！")
         else:
-            print(f"\n👑 向项目总指挥大人汇报:")
-            print(f"   ⚠️ 部分消息发送可能失败")
-            print(f"   📱 请检查Telegram设置")
-            print(f"   🔧 需要进一步调试")
-        
+            print("\n👑 向项目总指挥大人汇报:")
+            print("   ⚠️ 部分消息发送可能失败")
+            print("   📱 请检查Telegram设置")
+            print("   🔧 需要进一步调试")
+
         return test_report
+
 
 async def main():
     """主测试函数"""
     print("📱 PC28 Telegram测试推送")
     print("👑 立即给项目总指挥大人发送测试消息")
     print()
-    
+
     tester = PC28TelegramTestPush()
     result = await tester.execute_test_push()
-    
-    print(f"\n🎯 测试推送完成，请查看Telegram！")
+
+    print("\n🎯 测试推送完成，请查看Telegram！")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

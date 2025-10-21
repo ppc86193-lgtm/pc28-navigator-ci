@@ -5,12 +5,13 @@ PC28 上游逻辑改进建议
 """
 
 import asyncio
-import aiohttp
-from datetime import datetime
-from google.cloud import bigquery
 import logging
+from datetime import datetime
+
+from google.cloud import bigquery
 
 logger = logging.getLogger(__name__)
+
 
 class PC28ImprovedLogic:
     """改进的上游逻辑"""
@@ -25,7 +26,7 @@ class PC28ImprovedLogic:
             return set()
 
         # 使用IN查询一次性检查所有期号
-        placeholders = ','.join(['@issue_' + str(i) for i in range(len(issues))])
+        placeholders = ",".join(["@issue_" + str(i) for i in range(len(issues))])
         check_query = f"""
         SELECT DISTINCT issue FROM `wprojectl.pc28.draws_clean`
         WHERE issue IN ({placeholders})
@@ -55,7 +56,9 @@ class PC28ImprovedLogic:
 
             try:
                 # 获取一块数据
-                api_response = await self._get_historical_chunk(date, current_limit, offset)
+                api_response = await self._get_historical_chunk(
+                    date, current_limit, offset
+                )
                 if not api_response:
                     break
 
@@ -65,20 +68,23 @@ class PC28ImprovedLogic:
                     continue
 
                 # 批量查重
-                issues = [record['issue'] for record in parsed_records]
+                issues = [record["issue"] for record in parsed_records]
                 existing_issues = self.batch_check_duplicates(issues)
 
                 # 过滤新记录
                 new_records = [
-                    record for record in parsed_records
-                    if record['issue'] not in existing_issues
+                    record
+                    for record in parsed_records
+                    if record["issue"] not in existing_issues
                 ]
 
                 # 批量插入
                 if new_records:
                     saved_count = self._batch_insert_records(new_records)
                     total_saved += saved_count
-                    logger.info(f"块 {offset}-{offset+current_limit}: 保存 {saved_count} 条")
+                    logger.info(
+                        f"块 {offset}-{offset+current_limit}: 保存 {saved_count} 条"
+                    )
 
                 total_processed += len(parsed_records)
 
@@ -149,14 +155,18 @@ class PC28ImprovedLogic:
 
                 # API返回错误，等待后重试
                 if attempt < max_retries - 1:
-                    wait_time = 2 ** attempt  # 指数退避
-                    logger.warning(f"API请求失败，{wait_time}秒后重试 (尝试 {attempt + 1}/{max_retries})")
+                    wait_time = 2**attempt  # 指数退避
+                    logger.warning(
+                        f"API请求失败，{wait_time}秒后重试 (尝试 {attempt + 1}/{max_retries})"
+                    )
                     await asyncio.sleep(wait_time)
 
             except Exception as e:
                 if attempt < max_retries - 1:
-                    wait_time = 2 ** attempt
-                    logger.warning(f"请求异常: {e}，{wait_time}秒后重试 (尝试 {attempt + 1}/{max_retries})")
+                    wait_time = 2**attempt
+                    logger.warning(
+                        f"请求异常: {e}，{wait_time}秒后重试 (尝试 {attempt + 1}/{max_retries})"
+                    )
                     await asyncio.sleep(wait_time)
                 else:
                     logger.error(f"请求失败，已达最大重试次数: {e}")
@@ -166,6 +176,7 @@ class PC28ImprovedLogic:
     # 5. 智能限流控制
     class RateLimiter:
         """API限流控制"""
+
         def __init__(self, calls_per_minute=30):
             self.calls_per_minute = calls_per_minute
             self.calls = []
@@ -174,8 +185,9 @@ class PC28ImprovedLogic:
             """如果需要则等待"""
             now = datetime.now()
             # 清理1分钟前的记录
-            self.calls = [call_time for call_time in self.calls
-                         if (now - call_time).seconds < 60]
+            self.calls = [
+                call_time for call_time in self.calls if (now - call_time).seconds < 60
+            ]
 
             if len(self.calls) >= self.calls_per_minute:
                 # 已达限制，等待到最早记录过期
@@ -188,6 +200,7 @@ class PC28ImprovedLogic:
     # 6. 内存优化的数据处理
     def process_large_dataset_memory_efficient(self, data):
         """内存优化的大数据集处理"""
+
         # 使用生成器避免一次性加载所有数据到内存
         def record_generator():
             for item in data:
@@ -217,28 +230,30 @@ class PC28ImprovedLogic:
 async def optimized_backfill_endpoint():
     """优化的批量回填端点"""
     try:
-        date = request.args.get('date')
-        max_records = min(int(request.args.get('limit', 200)), 500)  # 限制最大数量
+        date = request.args.get("date")
+        max_records = min(int(request.args.get("limit", 200)), 500)  # 限制最大数量
 
         improved_client = PC28ImprovedLogic()
 
         # 使用分块处理
-        saved_count, processed_count = await improved_client.process_historical_data_chunked(
-            date, max_records
+        saved_count, processed_count = (
+            await improved_client.process_historical_data_chunked(date, max_records)
         )
 
-        return jsonify({
-            'status': 'success',
-            'date': date,
-            'processed': processed_count,
-            'saved': saved_count,
-            'skipped': processed_count - saved_count,
-            'optimization': 'chunked_processing_enabled'
-        })
+        return jsonify(
+            {
+                "status": "success",
+                "date": date,
+                "processed": processed_count,
+                "saved": saved_count,
+                "skipped": processed_count - saved_count,
+                "optimization": "chunked_processing_enabled",
+            }
+        )
 
     except Exception as e:
         logger.error(f"优化回填失败: {e}")
-        return jsonify({'status': 'error', 'error': str(e)}), 500
+        return jsonify({"status": "error", "error": str(e)}), 500
 
 
 """

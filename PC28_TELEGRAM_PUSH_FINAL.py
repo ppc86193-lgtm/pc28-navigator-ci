@@ -5,20 +5,24 @@ PC28 Telegram 推送最终版本
 完整支持开奖结果和预测结果推送
 """
 
-import subprocess
 import json
-import requests
-import time
-from datetime import datetime, timezone, timedelta
 import logging
+import subprocess
+import time
+from datetime import datetime, timedelta, timezone
+
+import requests
 
 # 配置
 BOT_TOKEN = "8094025881:AAF-7fv6djS0Z8QcgHwHloGSVguXj8XXEC0"
 CHAT_ID = "8420412156"
 
 # 配置日志
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
+
 
 class PC28TelegramPusher:
     def __init__(self):
@@ -30,11 +34,7 @@ class PC28TelegramPusher:
         """发送消息到Telegram"""
         try:
             url = f"{self.base_url}/sendMessage"
-            data = {
-                "chat_id": self.chat_id,
-                "text": text,
-                "parse_mode": parse_mode
-            }
+            data = {"chat_id": self.chat_id, "text": text, "parse_mode": parse_mode}
 
             response = requests.post(url, data=data, timeout=10)
             response.raise_for_status()
@@ -60,7 +60,14 @@ class PC28TelegramPusher:
             LIMIT 1
             """
 
-            cmd = ['bq', 'query', '--use_legacy_sql=false', '--format=json', '--quiet', query]
+            cmd = [
+                "bq",
+                "query",
+                "--use_legacy_sql=false",
+                "--format=json",
+                "--quiet",
+                query,
+            ]
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
 
             if result.stdout.strip():
@@ -90,7 +97,14 @@ class PC28TelegramPusher:
             LIMIT 1
             """
 
-            cmd = ['bq', 'query', '--use_legacy_sql=false', '--format=json', '--quiet', size_query]
+            cmd = [
+                "bq",
+                "query",
+                "--use_legacy_sql=false",
+                "--format=json",
+                "--quiet",
+                size_query,
+            ]
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
 
             size_pred = None
@@ -98,12 +112,16 @@ class PC28TelegramPusher:
                 size_data = json.loads(result.stdout)
                 if size_data:
                     size_pred = {
-                        'issue': size_data[0].get('issue'),
-                        'type': 'size',
-                        'prediction': '大' if size_data[0].get('predicted_size') == 'big' else '小',
-                        'confidence': float(size_data[0].get('big_probability', 0)),
-                        'model': 'pred_size_simple',
-                        'timestamp': size_data[0].get('timestamp')
+                        "issue": size_data[0].get("issue"),
+                        "type": "size",
+                        "prediction": (
+                            "大"
+                            if size_data[0].get("predicted_size") == "big"
+                            else "小"
+                        ),
+                        "confidence": float(size_data[0].get("big_probability", 0)),
+                        "model": "pred_size_simple",
+                        "timestamp": size_data[0].get("timestamp"),
                     }
 
             # 获取单双预测
@@ -119,7 +137,14 @@ class PC28TelegramPusher:
             LIMIT 1
             """
 
-            cmd = ['bq', 'query', '--use_legacy_sql=false', '--format=json', '--quiet', oddeven_query]
+            cmd = [
+                "bq",
+                "query",
+                "--use_legacy_sql=false",
+                "--format=json",
+                "--quiet",
+                oddeven_query,
+            ]
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
 
             oddeven_pred = None
@@ -127,12 +152,16 @@ class PC28TelegramPusher:
                 oddeven_data = json.loads(result.stdout)
                 if oddeven_data:
                     oddeven_pred = {
-                        'issue': oddeven_data[0].get('issue'),
-                        'type': 'odd_even',
-                        'prediction': '奇' if oddeven_data[0].get('predicted_oddeven') == 'odd' else '偶',
-                        'confidence': float(oddeven_data[0].get('odd_probability', 0)),
-                        'model': 'pred_oddeven_simple',
-                        'timestamp': oddeven_data[0].get('timestamp')
+                        "issue": oddeven_data[0].get("issue"),
+                        "type": "odd_even",
+                        "prediction": (
+                            "奇"
+                            if oddeven_data[0].get("predicted_oddeven") == "odd"
+                            else "偶"
+                        ),
+                        "confidence": float(oddeven_data[0].get("odd_probability", 0)),
+                        "model": "pred_oddeven_simple",
+                        "timestamp": oddeven_data[0].get("timestamp"),
                     }
 
             # 组合结果
@@ -163,7 +192,14 @@ class PC28TelegramPusher:
             LIMIT 5
             """
 
-            cmd = ['bq', 'query', '--use_legacy_sql=false', '--format=json', '--quiet', query]
+            cmd = [
+                "bq",
+                "query",
+                "--use_legacy_sql=false",
+                "--format=json",
+                "--quiet",
+                query,
+            ]
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
 
             if result.stdout.strip():
@@ -182,12 +218,12 @@ class PC28TelegramPusher:
             return None
 
         # 预测状态图标
-        size_icon = "🔴" if draw_data.get('size') == 'large' else "🟢"
-        oddeven_icon = "🔸" if draw_data.get('odd_even') == 'odd' else "🔹"
+        size_icon = "🔴" if draw_data.get("size") == "large" else "🟢"
+        oddeven_icon = "🔸" if draw_data.get("odd_even") == "odd" else "🔹"
 
         # 转换显示名称
-        size_cn = "大" if draw_data.get('size') == 'large' else "小"
-        oddeven_cn = "奇" if draw_data.get('odd_even') == 'odd' else "偶"
+        size_cn = "大" if draw_data.get("size") == "large" else "小"
+        oddeven_cn = "奇" if draw_data.get("odd_even") == "odd" else "偶"
 
         message = f"""🎯 *PC28开奖结果* #{draw_data.get('issue', '')}
 
@@ -212,7 +248,9 @@ class PC28TelegramPusher:
         time_str = beijing_time.strftime("%H:%M:%S")
 
         # 获取下期期号 - 基于最新的预测数据
-        next_issue = predictions_data[0].get('issue', '未知') if predictions_data else "未知"
+        next_issue = (
+            predictions_data[0].get("issue", "未知") if predictions_data else "未知"
+        )
 
         message = f"""🔮 *PC28预测分析* #{next_issue}
 
@@ -222,15 +260,19 @@ class PC28TelegramPusher:
 
         # 处理预测数据
         for pred in predictions_data:
-            if pred.get('type') == 'size':
-                confidence = pred.get('confidence', 0)
+            if pred.get("type") == "size":
+                confidence = pred.get("confidence", 0)
                 # 大小预测的置信度处理
-                if pred.get('prediction') == '大':
+                if pred.get("prediction") == "大":
                     actual_confidence = confidence
                 else:
                     actual_confidence = 1.0 - confidence
 
-                confidence_icon = "🟢" if actual_confidence >= 0.7 else "🟡" if actual_confidence >= 0.6 else "🔴"
+                confidence_icon = (
+                    "🟢"
+                    if actual_confidence >= 0.7
+                    else "🟡" if actual_confidence >= 0.6 else "🔴"
+                )
 
                 message += f"""📏 *大小预测*: {confidence_icon}
 预测结果: *{pred.get('prediction', '')}*
@@ -239,15 +281,19 @@ class PC28TelegramPusher:
 
 """
 
-            elif pred.get('type') == 'odd_even':
-                confidence = pred.get('confidence', 0)
+            elif pred.get("type") == "odd_even":
+                confidence = pred.get("confidence", 0)
                 # 单双预测的置信度处理
-                if pred.get('prediction') == '奇':
+                if pred.get("prediction") == "奇":
                     actual_confidence = confidence
                 else:
                     actual_confidence = 1.0 - confidence
 
-                confidence_icon = "🟢" if actual_confidence >= 0.7 else "🟡" if actual_confidence >= 0.6 else "🔴"
+                confidence_icon = (
+                    "🟢"
+                    if actual_confidence >= 0.7
+                    else "🟡" if actual_confidence >= 0.6 else "🔴"
+                )
 
                 message += f"""🎯 *单双预测*: {confidence_icon}
 预测结果: *{pred.get('prediction', '')}*
@@ -276,10 +322,14 @@ class PC28TelegramPusher:
 """
 
         # 统计模型预测
-        model_count = len(set(item.get('model_id') for item in model_data))
-        avg_prediction = sum(float(item.get('prediction_big', 0)) for item in model_data) / len(model_data)
+        model_count = len(set(item.get("model_id") for item in model_data))
+        avg_prediction = sum(
+            float(item.get("prediction_big", 0)) for item in model_data
+        ) / len(model_data)
 
-        big_count = sum(1 for item in model_data if float(item.get('prediction_big', 0)) >= 0.5)
+        big_count = sum(
+            1 for item in model_data if float(item.get("prediction_big", 0)) >= 0.5
+        )
         small_count = len(model_data) - big_count
 
         message += f"""🤖 *活跃模型*: `{model_count}个`
@@ -294,11 +344,15 @@ class PC28TelegramPusher:
         # 显示前3个模型的详细预测
         message += "🎯 *模型详情*:\n"
         for i, model in enumerate(model_data[:3]):
-            prediction_text = "大" if float(model.get('prediction_big', 0)) >= 0.5 else "小"
-            confidence = float(model.get('prediction_big', 0))
+            prediction_text = (
+                "大" if float(model.get("prediction_big", 0)) >= 0.5 else "小"
+            )
+            confidence = float(model.get("prediction_big", 0))
             actual_conf = confidence if prediction_text == "大" else 1.0 - confidence
 
-            message += f"• {model.get('model_id')}: {prediction_text} ({actual_conf:.1%})\n"
+            message += (
+                f"• {model.get('model_id')}: {prediction_text} ({actual_conf:.1%})\n"
+            )
 
         message += """
 ━━━━━━━━━━━━━━━━━
@@ -351,14 +405,11 @@ class PC28TelegramPusher:
 
         return self.send_message(message)
 
-    def push_system_alert(self, alert_type: str, alert_message: str, severity: str = "INFO"):
+    def push_system_alert(
+        self, alert_type: str, alert_message: str, severity: str = "INFO"
+    ):
         """推送系统告警"""
-        severity_icons = {
-            "INFO": "ℹ️",
-            "WARN": "⚠️",
-            "ERROR": "🚨",
-            "CRITICAL": "🔥"
-        }
+        severity_icons = {"INFO": "ℹ️", "WARN": "⚠️", "ERROR": "🚨", "CRITICAL": "🔥"}
 
         icon = severity_icons.get(severity, "ℹ️")
         beijing_time = datetime.now(timezone(timedelta(hours=8)))
@@ -402,6 +453,7 @@ class PC28TelegramPusher:
         print(f"✅ 完整分析推送完成: {success_count}/3 成功")
         return success_count == 3
 
+
 def main():
     pusher = PC28TelegramPusher()
 
@@ -443,7 +495,9 @@ def main():
 
         try:
             while True:
-                print(f"\n📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - 执行推送...")
+                print(
+                    f"\n📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - 执行推送..."
+                )
                 pusher.push_complete_analysis()
                 print("⏳ 等待10分钟...")
                 time.sleep(600)  # 10分钟
@@ -452,6 +506,7 @@ def main():
 
     else:
         print("❌ 无效选择")
+
 
 if __name__ == "__main__":
     main()

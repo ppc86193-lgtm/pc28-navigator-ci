@@ -150,7 +150,7 @@ done
 
 F2. 基本查询可跑
 
-bq --location=${BQLOC} query --use_legacy_sql=false --format=csv "SELECT COUNT(*) c FROM \`${PROJECT}.${DS_LAB}.draws_today_v2\`" 
+bq --location=${BQLOC} query --use_legacy_sql=false --format=csv "SELECT COUNT(*) c FROM \`${PROJECT}.${DS_LAB}.draws_today_v2\`"
 bq --location=${BQLOC} query --use_legacy_sql=false --format=csv "SELECT COUNT(*) c FROM \`${PROJECT}.${DS_LAB}.lab_push_candidates_v2\`"
 
 	•	期望：均返回1行计数（可为0，但SQL必须成功）。
@@ -551,7 +551,7 @@ done
 
 F2. 基本查询可跑
 
-bq --location=${BQLOC} query --use_legacy_sql=false --format=csv "SELECT COUNT(*) c FROM \`${PROJECT}.${DS_LAB}.draws_today_v2\`" 
+bq --location=${BQLOC} query --use_legacy_sql=false --format=csv "SELECT COUNT(*) c FROM \`${PROJECT}.${DS_LAB}.draws_today_v2\`"
 bq --location=${BQLOC} query --use_legacy_sql=false --format=csv "SELECT COUNT(*) c FROM \`${PROJECT}.${DS_LAB}.lab_push_candidates_v2\`"
 
 	•	期望：均返回1行计数（可为0，但SQL必须成功）。

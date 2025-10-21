@@ -8,25 +8,26 @@ PC28 开奖数据服务 - 优化版
 """
 
 import asyncio
-import aiohttp
-import os
-import time
 import hashlib
 import json
-from flask import Flask, jsonify, request
-from datetime import datetime, timedelta
-from google.cloud import bigquery
 import logging
+import os
+import time
+from datetime import datetime, timedelta
+
+import aiohttp
+from flask import Flask, jsonify, request
+from google.cloud import bigquery
 
 # 配置日志
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 bq_client = bigquery.Client(project="wprojectl", location="us-central1")
+
 
 class PC28APIOptimized:
     """优化的PC28 API客户端"""
@@ -38,7 +39,7 @@ class PC28APIOptimized:
 
     def _generate_sign(self, params):
         """生成API签名"""
-        filtered_params = {k: v for k, v in params.items() if v is not None and v != ''}
+        filtered_params = {k: v for k, v in params.items() if v is not None and v != ""}
         sorted_params = sorted(filtered_params.items())
         sign_string = "".join([f"{k}{v}" for k, v in sorted_params]) + self.key
         return hashlib.md5(sign_string.encode()).hexdigest()
@@ -46,23 +47,24 @@ class PC28APIOptimized:
     async def _make_request(self, endpoint, **kwargs):
         """统一的API请求方法"""
         timestamp = str(int(time.time()))
-        params = {
-            'appid': self.appid,
-            'format': 'json',
-            'time': timestamp,
-            **kwargs
-        }
-        params['sign'] = self._generate_sign(params)
+        params = {"appid": self.appid, "format": "json", "time": timestamp, **kwargs}
+        params["sign"] = self._generate_sign(params)
 
         try:
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
-                async with session.get(f"{self.base_url}/{endpoint}", params=params) as response:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=10)
+            ) as session:
+                async with session.get(
+                    f"{self.base_url}/{endpoint}", params=params
+                ) as response:
                     if response.status == 200:
                         data = await response.json()
-                        if data.get('codeid') == 10000:
+                        if data.get("codeid") == 10000:
                             return data
                         else:
-                            logger.error(f"API错误 {endpoint}: {data.get('message', 'unknown')}")
+                            logger.error(
+                                f"API错误 {endpoint}: {data.get('message', 'unknown')}"
+                            )
                     else:
                         logger.error(f"HTTP错误 {endpoint}: {response.status}")
                     return None
@@ -78,9 +80,9 @@ class PC28APIOptimized:
         """获取历史开奖数据"""
         kwargs = {}
         if date:
-            kwargs['date'] = date
+            kwargs["date"] = date
         if limit:
-            kwargs['limit'] = str(limit)
+            kwargs["limit"] = str(limit)
         return await self._make_request("260", **kwargs)
 
     async def get_lottery_info(self):
@@ -91,58 +93,64 @@ class PC28APIOptimized:
         """解析开奖数据"""
         try:
             if source == "realtime":
-                retdata = api_response.get('retdata', {})
-                current = retdata.get('curent', {})
-                next_data = retdata.get('next', {})
-                numbers = current.get('number', [])
+                retdata = api_response.get("retdata", {})
+                current = retdata.get("curent", {})
+                next_data = retdata.get("next", {})
+                numbers = current.get("number", [])
 
                 if len(numbers) != 3:
                     return None
 
                 return {
-                    'draw_data': {
-                        'issue': current.get('long_issue'),
-                        'timestamp': current.get('kjtime', datetime.now().isoformat()),
-                        'numbers': [int(n) for n in numbers],
-                        'kjtime_raw': current.get('kjtime'),
-                        'next_issue': str(next_data.get('next_issue', '')),
-                        'next_time': next_data.get('next_time'),
-                        'award_time': next_data.get('award_time')
+                    "draw_data": {
+                        "issue": current.get("long_issue"),
+                        "timestamp": current.get("kjtime", datetime.now().isoformat()),
+                        "numbers": [int(n) for n in numbers],
+                        "kjtime_raw": current.get("kjtime"),
+                        "next_issue": str(next_data.get("next_issue", "")),
+                        "next_time": next_data.get("next_time"),
+                        "award_time": next_data.get("award_time"),
                     },
-                    'api_meta': {
-                        'codeid': api_response.get('codeid'),
-                        'message': api_response.get('message', ''),
-                        'curtime': api_response.get('curtime'),
-                        'raw_response': json.dumps(api_response, ensure_ascii=False)
-                    }
+                    "api_meta": {
+                        "codeid": api_response.get("codeid"),
+                        "message": api_response.get("message", ""),
+                        "curtime": api_response.get("curtime"),
+                        "raw_response": json.dumps(api_response, ensure_ascii=False),
+                    },
                 }
 
             elif source == "historical":
-                retdata = api_response.get('retdata', [])
+                retdata = api_response.get("retdata", [])
                 if not isinstance(retdata, list):
                     return []
 
                 parsed_draws = []
                 for record in retdata:
-                    numbers = record.get('number', [])
+                    numbers = record.get("number", [])
                     if len(numbers) == 3:
-                        parsed_draws.append({
-                            'draw_data': {
-                                'issue': record.get('long_issue'),
-                                'timestamp': record.get('kjtime', datetime.now().isoformat()),
-                                'numbers': [int(n) for n in numbers],
-                                'kjtime_raw': record.get('kjtime'),
-                                'next_issue': None,
-                                'next_time': None,
-                                'award_time': None
-                            },
-                            'api_meta': {
-                                'codeid': api_response.get('codeid'),
-                                'message': api_response.get('message', ''),
-                                'curtime': api_response.get('curtime'),
-                                'raw_response': json.dumps(record, ensure_ascii=False)
+                        parsed_draws.append(
+                            {
+                                "draw_data": {
+                                    "issue": record.get("long_issue"),
+                                    "timestamp": record.get(
+                                        "kjtime", datetime.now().isoformat()
+                                    ),
+                                    "numbers": [int(n) for n in numbers],
+                                    "kjtime_raw": record.get("kjtime"),
+                                    "next_issue": None,
+                                    "next_time": None,
+                                    "award_time": None,
+                                },
+                                "api_meta": {
+                                    "codeid": api_response.get("codeid"),
+                                    "message": api_response.get("message", ""),
+                                    "curtime": api_response.get("curtime"),
+                                    "raw_response": json.dumps(
+                                        record, ensure_ascii=False
+                                    ),
+                                },
                             }
-                        })
+                        )
                 return parsed_draws
 
             return None
@@ -152,35 +160,34 @@ class PC28APIOptimized:
 
     def _build_bigquery_record(self, parsed_data, source):
         """构建BigQuery插入记录"""
-        draw_data = parsed_data['draw_data']
-        api_meta = parsed_data['api_meta']
-        numbers = draw_data['numbers']
+        draw_data = parsed_data["draw_data"]
+        api_meta = parsed_data["api_meta"]
+        numbers = draw_data["numbers"]
         total_sum = sum(numbers)
 
         return {
             # 基础数据
-            'issue': draw_data['issue'],
-            'timestamp': draw_data['timestamp'],
-            'a': numbers[0],
-            'b': numbers[1],
-            'c': numbers[2],
-            'sum': total_sum,
-            'tail': total_sum % 10,
-            'size': 'large' if total_sum > 13 else 'small',
-            'odd_even': 'odd' if total_sum % 2 == 1 else 'even',
-            'patterns': None,
-            'source': source,
-            'created_at': datetime.now().isoformat(),
-
+            "issue": draw_data["issue"],
+            "timestamp": draw_data["timestamp"],
+            "a": numbers[0],
+            "b": numbers[1],
+            "c": numbers[2],
+            "sum": total_sum,
+            "tail": total_sum % 10,
+            "size": "large" if total_sum > 13 else "small",
+            "odd_even": "odd" if total_sum % 2 == 1 else "even",
+            "patterns": None,
+            "source": source,
+            "created_at": datetime.now().isoformat(),
             # API元数据
-            'api_codeid': api_meta['codeid'],
-            'api_message': api_meta['message'],
-            'api_curtime': api_meta['curtime'],
-            'kjtime_raw': draw_data['kjtime_raw'],
-            'next_issue': draw_data['next_issue'],
-            'next_time': draw_data['next_time'],
-            'award_time': draw_data['award_time'],
-            'raw_api_response': api_meta['raw_response']
+            "api_codeid": api_meta["codeid"],
+            "api_message": api_meta["message"],
+            "api_curtime": api_meta["curtime"],
+            "kjtime_raw": draw_data["kjtime_raw"],
+            "next_issue": draw_data["next_issue"],
+            "next_time": draw_data["next_time"],
+            "award_time": draw_data["award_time"],
+            "raw_api_response": api_meta["raw_response"],
         }
 
     def save_to_bigquery(self, records, check_duplicates=True):
@@ -220,13 +227,13 @@ class PC28APIOptimized:
         """批量保存with增强去重"""
         try:
             # 提取所有期号进行批量检查
-            issues = [str(r.get('issue', '')) for r in records if r.get('issue')]
+            issues = [str(r.get("issue", "")) for r in records if r.get("issue")]
 
             if not issues:
                 return 0
 
             # 批量查询已存在的期号 - 单次查询优化
-            placeholders = ','.join([f"'{issue}'" for issue in issues])
+            placeholders = ",".join([f"'{issue}'" for issue in issues])
             batch_query = f"""
             SELECT DISTINCT issue FROM `wprojectl.pc28.draws_clean`
             WHERE issue IN ({placeholders})
@@ -237,11 +244,14 @@ class PC28APIOptimized:
 
             # 过滤新记录
             new_records = [
-                record for record in records
-                if str(record.get('issue', '')) not in existing_issues
+                record
+                for record in records
+                if str(record.get("issue", "")) not in existing_issues
             ]
 
-            logger.info(f"批量去重: {len(records)} -> {len(new_records)} (过滤{len(records)-len(new_records)}重复)")
+            logger.info(
+                f"批量去重: {len(records)} -> {len(new_records)} (过滤{len(records)-len(new_records)}重复)"
+            )
 
             # 批量插入新记录
             saved_count = 0
@@ -261,7 +271,7 @@ class PC28APIOptimized:
     def _is_duplicate_record(self, record):
         """增强的单条记录重复检查"""
         try:
-            issue = record.get('issue')
+            issue = record.get("issue")
             if not issue:
                 return True  # 没有期号的记录视为重复
 
@@ -282,8 +292,8 @@ class PC28APIOptimized:
                 return True
 
             # 2. 内容相似度检查 (时间窗口内的相同数据)
-            timestamp = record.get('timestamp', datetime.now().isoformat())
-            a, b, c = record.get('a', 0), record.get('b', 0), record.get('c', 0)
+            timestamp = record.get("timestamp", datetime.now().isoformat())
+            a, b, c = record.get("a", 0), record.get("b", 0), record.get("c", 0)
 
             similarity_query = """
             SELECT COUNT(*) as count FROM `wprojectl.pc28.draws_clean`
@@ -297,12 +307,16 @@ class PC28APIOptimized:
                     bigquery.ScalarQueryParameter("a", "INTEGER", a),
                     bigquery.ScalarQueryParameter("b", "INTEGER", b),
                     bigquery.ScalarQueryParameter("c", "INTEGER", c),
-                    bigquery.ScalarQueryParameter("record_time", "TIMESTAMP", timestamp),
-                    bigquery.ScalarQueryParameter("issue", "STRING", str(issue))
+                    bigquery.ScalarQueryParameter(
+                        "record_time", "TIMESTAMP", timestamp
+                    ),
+                    bigquery.ScalarQueryParameter("issue", "STRING", str(issue)),
                 ]
             )
 
-            similarity_result = bq_client.query(similarity_query, similarity_config).result()
+            similarity_result = bq_client.query(
+                similarity_query, similarity_config
+            ).result()
             if next(iter(similarity_result)).count > 0:
                 logger.warning(f"发现相似记录: {issue} [{a},{b},{c}] 在5分钟内")
                 # 不直接拒绝，但记录警告
@@ -327,26 +341,46 @@ class PC28APIOptimized:
 
         job_config = bigquery.QueryJobConfig(
             query_parameters=[
-                bigquery.ScalarQueryParameter("issue", "STRING", record['issue']),
-                bigquery.ScalarQueryParameter("timestamp", "TIMESTAMP", record['timestamp']),
-                bigquery.ScalarQueryParameter("a", "INTEGER", record['a']),
-                bigquery.ScalarQueryParameter("b", "INTEGER", record['b']),
-                bigquery.ScalarQueryParameter("c", "INTEGER", record['c']),
-                bigquery.ScalarQueryParameter("sum", "INTEGER", record['sum']),
-                bigquery.ScalarQueryParameter("tail", "INTEGER", record['tail']),
-                bigquery.ScalarQueryParameter("size", "STRING", record['size']),
-                bigquery.ScalarQueryParameter("odd_even", "STRING", record['odd_even']),
-                bigquery.ScalarQueryParameter("patterns", "STRING", record['patterns']),
-                bigquery.ScalarQueryParameter("source", "STRING", record['source']),
-                bigquery.ScalarQueryParameter("created_at", "TIMESTAMP", record['created_at']),
-                bigquery.ScalarQueryParameter("api_codeid", "INTEGER", record['api_codeid']),
-                bigquery.ScalarQueryParameter("api_message", "STRING", record['api_message']),
-                bigquery.ScalarQueryParameter("api_curtime", "INTEGER", record['api_curtime']),
-                bigquery.ScalarQueryParameter("kjtime_raw", "STRING", record['kjtime_raw']),
-                bigquery.ScalarQueryParameter("next_issue", "STRING", record['next_issue']),
-                bigquery.ScalarQueryParameter("next_time", "STRING", record['next_time']),
-                bigquery.ScalarQueryParameter("award_time", "INTEGER", record['award_time']),
-                bigquery.ScalarQueryParameter("raw_api_response", "STRING", record['raw_api_response']),
+                bigquery.ScalarQueryParameter("issue", "STRING", record["issue"]),
+                bigquery.ScalarQueryParameter(
+                    "timestamp", "TIMESTAMP", record["timestamp"]
+                ),
+                bigquery.ScalarQueryParameter("a", "INTEGER", record["a"]),
+                bigquery.ScalarQueryParameter("b", "INTEGER", record["b"]),
+                bigquery.ScalarQueryParameter("c", "INTEGER", record["c"]),
+                bigquery.ScalarQueryParameter("sum", "INTEGER", record["sum"]),
+                bigquery.ScalarQueryParameter("tail", "INTEGER", record["tail"]),
+                bigquery.ScalarQueryParameter("size", "STRING", record["size"]),
+                bigquery.ScalarQueryParameter("odd_even", "STRING", record["odd_even"]),
+                bigquery.ScalarQueryParameter("patterns", "STRING", record["patterns"]),
+                bigquery.ScalarQueryParameter("source", "STRING", record["source"]),
+                bigquery.ScalarQueryParameter(
+                    "created_at", "TIMESTAMP", record["created_at"]
+                ),
+                bigquery.ScalarQueryParameter(
+                    "api_codeid", "INTEGER", record["api_codeid"]
+                ),
+                bigquery.ScalarQueryParameter(
+                    "api_message", "STRING", record["api_message"]
+                ),
+                bigquery.ScalarQueryParameter(
+                    "api_curtime", "INTEGER", record["api_curtime"]
+                ),
+                bigquery.ScalarQueryParameter(
+                    "kjtime_raw", "STRING", record["kjtime_raw"]
+                ),
+                bigquery.ScalarQueryParameter(
+                    "next_issue", "STRING", record["next_issue"]
+                ),
+                bigquery.ScalarQueryParameter(
+                    "next_time", "STRING", record["next_time"]
+                ),
+                bigquery.ScalarQueryParameter(
+                    "award_time", "INTEGER", record["award_time"]
+                ),
+                bigquery.ScalarQueryParameter(
+                    "raw_api_response", "STRING", record["raw_api_response"]
+                ),
             ]
         )
 
@@ -356,84 +390,97 @@ class PC28APIOptimized:
 # 全局API客户端实例
 api_client = PC28APIOptimized()
 
-@app.route('/health')
+
+@app.route("/health")
 def health():
     """健康检查"""
-    return jsonify({
-        'status': 'healthy',
-        'service': 'PC28 Optimized API Service',
-        'timestamp': datetime.now().isoformat(),
-        'version': '2.0'
-    })
+    return jsonify(
+        {
+            "status": "healthy",
+            "service": "PC28 Optimized API Service",
+            "timestamp": datetime.now().isoformat(),
+            "version": "2.0",
+        }
+    )
 
-@app.route('/fetch/realtime')
+
+@app.route("/fetch/realtime")
 async def fetch_realtime():
     """获取并保存实时开奖数据"""
     try:
         api_response = await api_client.get_realtime_draw()
         if not api_response:
-            return jsonify({'status': 'api_error'}), 500
+            return jsonify({"status": "api_error"}), 500
 
         parsed = api_client._parse_draw_data(api_response, "realtime")
         if not parsed:
-            return jsonify({'status': 'parse_error'}), 400
+            return jsonify({"status": "parse_error"}), 400
 
         record = api_client._build_bigquery_record(parsed, "api_realtime_optimized")
         saved_count = api_client.save_to_bigquery([record])
 
-        return jsonify({
-            'status': 'success' if saved_count > 0 else 'duplicate',
-            'issue': record['issue'],
-            'numbers': [record['a'], record['b'], record['c']],
-            'sum': record['sum'],
-            'kjtime': record['kjtime_raw'],
-            'next_issue': record['next_issue'],
-            'saved': saved_count > 0
-        })
+        return jsonify(
+            {
+                "status": "success" if saved_count > 0 else "duplicate",
+                "issue": record["issue"],
+                "numbers": [record["a"], record["b"], record["c"]],
+                "sum": record["sum"],
+                "kjtime": record["kjtime_raw"],
+                "next_issue": record["next_issue"],
+                "saved": saved_count > 0,
+            }
+        )
 
     except Exception as e:
         logger.error(f"实时数据获取失败: {e}")
-        return jsonify({'status': 'error', 'error': str(e)}), 500
+        return jsonify({"status": "error", "error": str(e)}), 500
 
-@app.route('/backfill/batch')
+
+@app.route("/backfill/batch")
 async def backfill_batch():
     """批量回填历史数据"""
     try:
         # 获取参数
-        date = request.args.get('date')  # 格式: 2025-09-18
-        days = int(request.args.get('days', 1))  # 回填天数
-        limit_per_day = int(request.args.get('limit', 100))  # 每天最大记录数
+        date = request.args.get("date")  # 格式: 2025-09-18
+        days = int(request.args.get("days", 1))  # 回填天数
+        limit_per_day = int(request.args.get("limit", 100))  # 每天最大记录数
 
         if not date:
-            return jsonify({'status': 'error', 'message': '需要提供date参数'}), 400
+            return jsonify({"status": "error", "message": "需要提供date参数"}), 400
 
         total_saved = 0
         total_processed = 0
         results = []
 
         # 处理多天回填
-        base_date = datetime.strptime(date, '%Y-%m-%d')
+        base_date = datetime.strptime(date, "%Y-%m-%d")
         for i in range(days):
-            target_date = (base_date + timedelta(days=i)).strftime('%Y-%m-%d')
+            target_date = (base_date + timedelta(days=i)).strftime("%Y-%m-%d")
 
-            api_response = await api_client.get_historical_draws(target_date, limit_per_day)
+            api_response = await api_client.get_historical_draws(
+                target_date, limit_per_day
+            )
             if not api_response:
-                results.append({
-                    'date': target_date,
-                    'status': 'api_error',
-                    'saved': 0,
-                    'processed': 0
-                })
+                results.append(
+                    {
+                        "date": target_date,
+                        "status": "api_error",
+                        "saved": 0,
+                        "processed": 0,
+                    }
+                )
                 continue
 
             parsed_list = api_client._parse_draw_data(api_response, "historical")
             if not parsed_list:
-                results.append({
-                    'date': target_date,
-                    'status': 'parse_error',
-                    'saved': 0,
-                    'processed': 0
-                })
+                results.append(
+                    {
+                        "date": target_date,
+                        "status": "parse_error",
+                        "saved": 0,
+                        "processed": 0,
+                    }
+                )
                 continue
 
             # 构建记录并保存
@@ -446,57 +493,69 @@ async def backfill_batch():
             total_saved += saved_count
             total_processed += len(records)
 
-            results.append({
-                'date': target_date,
-                'status': 'success',
-                'saved': saved_count,
-                'processed': len(records),
-                'skipped': len(records) - saved_count
-            })
+            results.append(
+                {
+                    "date": target_date,
+                    "status": "success",
+                    "saved": saved_count,
+                    "processed": len(records),
+                    "skipped": len(records) - saved_count,
+                }
+            )
 
             # 添加延时避免API限制
             if i < days - 1:
                 await asyncio.sleep(1)
 
-        return jsonify({
-            'status': 'completed',
-            'total_saved': total_saved,
-            'total_processed': total_processed,
-            'date_range': f"{date} - {(base_date + timedelta(days=days-1)).strftime('%Y-%m-%d')}",
-            'results': results
-        })
+        return jsonify(
+            {
+                "status": "completed",
+                "total_saved": total_saved,
+                "total_processed": total_processed,
+                "date_range": f"{date} - {(base_date + timedelta(days=days-1)).strftime('%Y-%m-%d')}",
+                "results": results,
+            }
+        )
 
     except Exception as e:
         logger.error(f"批量回填失败: {e}")
-        return jsonify({'status': 'error', 'error': str(e)}), 500
+        return jsonify({"status": "error", "error": str(e)}), 500
 
-@app.route('/info/lottery')
+
+@app.route("/info/lottery")
 async def get_lottery_info():
     """获取彩票信息"""
     try:
         info_data = await api_client.get_lottery_info()
         if info_data:
-            return jsonify({
-                'status': 'success',
-                'lottery_info': info_data.get('retdata', {}),
-                'api_status': info_data.get('message')
-            })
+            return jsonify(
+                {
+                    "status": "success",
+                    "lottery_info": info_data.get("retdata", {}),
+                    "api_status": info_data.get("message"),
+                }
+            )
         else:
-            return jsonify({'status': 'api_error'}), 500
+            return jsonify({"status": "api_error"}), 500
     except Exception as e:
-        return jsonify({'status': 'error', 'error': str(e)}), 500
+        return jsonify({"status": "error", "error": str(e)}), 500
 
-@app.route('/backfill/smart')
+
+@app.route("/backfill/smart")
 async def smart_backfill():
     """智能历史数据回填 - 只回填缺失的数据"""
     try:
-        days = int(request.json.get('days', 1) if request.is_json else request.args.get('days', 1))
+        days = int(
+            request.json.get("days", 1)
+            if request.is_json
+            else request.args.get("days", 1)
+        )
 
         results = []
         total_saved = 0
 
         for i in range(days):
-            target_date = (datetime.now() - timedelta(days=i+1)).strftime('%Y-%m-%d')
+            target_date = (datetime.now() - timedelta(days=i + 1)).strftime("%Y-%m-%d")
 
             # 检查当天数据完整性 - 使用精确期数
             expected_draws = 403  # 精确计算: 理论411期 - 维护期8期 (每期3.5分钟)
@@ -516,32 +575,40 @@ async def smart_backfill():
             missing_ratio = (expected_draws - existing_count) / expected_draws
 
             if missing_ratio > 0.05:  # 缺失5%以上才回填
-                logger.info(f"日期 {target_date} 缺失 {missing_ratio:.1%} 数据，开始智能回填 (期望{expected_draws}期)")
+                logger.info(
+                    f"日期 {target_date} 缺失 {missing_ratio:.1%} 数据，开始智能回填 (期望{expected_draws}期)"
+                )
 
                 # 分批回填
                 batch_saved = 0
                 for batch_start in range(0, 300, 50):  # 每批50条，最多6批
-                    api_response = await api_client.get_historical_draws(target_date, 50)
+                    api_response = await api_client.get_historical_draws(
+                        target_date, 50
+                    )
                     if not api_response:
                         break
 
-                    parsed_list = api_client._parse_draw_data(api_response, "historical")
+                    parsed_list = api_client._parse_draw_data(
+                        api_response, "historical"
+                    )
                     if not parsed_list:
                         break
 
                     # 批量检查重复
-                    issues = [p['draw_data']['issue'] for p in parsed_list]
+                    issues = [p["draw_data"]["issue"] for p in parsed_list]
                     existing_issues = await check_existing_issues_batch(issues)
 
                     # 过滤新记录
                     new_records = [
                         api_client._build_bigquery_record(p, "api_smart_backfill")
                         for p in parsed_list
-                        if p['draw_data']['issue'] not in existing_issues
+                        if p["draw_data"]["issue"] not in existing_issues
                     ]
 
                     if new_records:
-                        saved_count = api_client.save_to_bigquery(new_records, check_duplicates=False)
+                        saved_count = api_client.save_to_bigquery(
+                            new_records, check_duplicates=False
+                        )
                         batch_saved += saved_count
 
                     await asyncio.sleep(1)  # 防止API限制
@@ -550,41 +617,48 @@ async def smart_backfill():
                         break
 
                 total_saved += batch_saved
-                results.append({
-                    'date': target_date,
-                    'existing': existing_count,
-                    'expected': expected_draws,
-                    'missing_ratio': f"{missing_ratio:.1%}",
-                    'backfilled': batch_saved,
-                    'status': 'backfilled'
-                })
+                results.append(
+                    {
+                        "date": target_date,
+                        "existing": existing_count,
+                        "expected": expected_draws,
+                        "missing_ratio": f"{missing_ratio:.1%}",
+                        "backfilled": batch_saved,
+                        "status": "backfilled",
+                    }
+                )
             else:
-                results.append({
-                    'date': target_date,
-                    'existing': existing_count,
-                    'expected': expected_draws,
-                    'missing_ratio': f"{missing_ratio:.1%}",
-                    'backfilled': 0,
-                    'status': 'complete'
-                })
+                results.append(
+                    {
+                        "date": target_date,
+                        "existing": existing_count,
+                        "expected": expected_draws,
+                        "missing_ratio": f"{missing_ratio:.1%}",
+                        "backfilled": 0,
+                        "status": "complete",
+                    }
+                )
 
-        return jsonify({
-            'status': 'success',
-            'total_backfilled': total_saved,
-            'results': results,
-            'strategy': 'intelligent_gap_filling'
-        })
+        return jsonify(
+            {
+                "status": "success",
+                "total_backfilled": total_saved,
+                "results": results,
+                "strategy": "intelligent_gap_filling",
+            }
+        )
 
     except Exception as e:
         logger.error(f"智能回填失败: {e}")
-        return jsonify({'status': 'error', 'error': str(e)}), 500
+        return jsonify({"status": "error", "error": str(e)}), 500
+
 
 async def check_existing_issues_batch(issues):
     """批量检查已存在的期号"""
     if not issues:
         return set()
 
-    placeholders = ','.join([f"'{issue}'" for issue in issues])
+    placeholders = ",".join([f"'{issue}'" for issue in issues])
     check_query = f"""
     SELECT DISTINCT issue FROM `wprojectl.pc28.draws_clean`
     WHERE issue IN ({placeholders})
@@ -593,7 +667,8 @@ async def check_existing_issues_batch(issues):
     result = bq_client.query(check_query).result()
     return {row.issue for row in result}
 
-@app.route('/recovery/post-maintenance')
+
+@app.route("/recovery/post-maintenance")
 async def post_maintenance_recovery():
     """维护期后数据恢复"""
     try:
@@ -602,11 +677,13 @@ async def post_maintenance_recovery():
 
         # 检查是否刚过维护期
         if current_time < maintenance_end or current_time > time(20, 0):
-            return jsonify({
-                'status': 'skip',
-                'message': '非维护恢复时间窗口',
-                'current_time': current_time.isoformat()
-            })
+            return jsonify(
+                {
+                    "status": "skip",
+                    "message": "非维护恢复时间窗口",
+                    "current_time": current_time.isoformat(),
+                }
+            )
 
         logger.info("维护期后恢复检查开始")
 
@@ -615,12 +692,14 @@ async def post_maintenance_recovery():
         if latest_data:
             parsed = api_client._parse_draw_data(latest_data, "realtime")
             if parsed:
-                record = api_client._build_bigquery_record(parsed, "post_maintenance_recovery")
+                record = api_client._build_bigquery_record(
+                    parsed, "post_maintenance_recovery"
+                )
                 saved = api_client.save_to_bigquery([record])
                 logger.info(f"维护后立即拉取: {record['issue']}")
 
         # 2. 检查维护期间的数据缺失 (19:00-19:30)
-        today = datetime.now().strftime('%Y-%m-%d')
+        today = datetime.now().strftime("%Y-%m-%d")
         maintenance_gap_query = """
         SELECT COUNT(*) as count FROM `wprojectl.pc28.draws_clean`
         WHERE DATE(timestamp) = @date
@@ -628,9 +707,7 @@ async def post_maintenance_recovery():
         """
 
         job_config = bigquery.QueryJobConfig(
-            query_parameters=[
-                bigquery.ScalarQueryParameter("date", "DATE", today)
-            ]
+            query_parameters=[bigquery.ScalarQueryParameter("date", "DATE", today)]
         )
 
         result = bq_client.query(maintenance_gap_query, job_config=job_config).result()
@@ -648,25 +725,32 @@ async def post_maintenance_recovery():
                     maintenance_records = [
                         api_client._build_bigquery_record(p, "maintenance_gap_fill")
                         for p in parsed_list
-                        if '19:' in p['draw_data']['timestamp']
+                        if "19:" in p["draw_data"]["timestamp"]
                     ]
 
                     if maintenance_records:
                         gap_filled = api_client.save_to_bigquery(maintenance_records)
 
-        return jsonify({
-            'status': 'success',
-            'recovery_time': datetime.now().isoformat(),
-            'latest_fetch': latest_data.get('curent', {}).get('long_issue') if latest_data else None,
-            'maintenance_gap_filled': gap_filled,
-            'next_action': 'resume_normal_schedule'
-        })
+        return jsonify(
+            {
+                "status": "success",
+                "recovery_time": datetime.now().isoformat(),
+                "latest_fetch": (
+                    latest_data.get("curent", {}).get("long_issue")
+                    if latest_data
+                    else None
+                ),
+                "maintenance_gap_filled": gap_filled,
+                "next_action": "resume_normal_schedule",
+            }
+        )
 
     except Exception as e:
         logger.error(f"维护后恢复失败: {e}")
-        return jsonify({'status': 'error', 'error': str(e)}), 500
+        return jsonify({"status": "error", "error": str(e)}), 500
 
-@app.route('/schedule/status')
+
+@app.route("/schedule/status")
 def schedule_status():
     """获取调度状态和建议"""
     try:
@@ -685,36 +769,43 @@ def schedule_status():
             if current_time_only < time(0, 3, 46):
                 next_action_time = datetime.combine(current_time.date(), time(0, 3, 46))
             else:
-                next_action_time = datetime.combine(current_time.date() + timedelta(days=1), time(0, 3, 46))
+                next_action_time = datetime.combine(
+                    current_time.date() + timedelta(days=1), time(0, 3, 46)
+                )
             next_action = "resume_active_period"
         else:
             # 下次实时拉取时间 (2分钟间隔)
             next_action_time = current_time + timedelta(minutes=2)
             next_action = "realtime_fetch"
 
-        return jsonify({
-            'current_time': current_time.isoformat(),
-            'status': {
-                'active_period': is_active_period,
-                'maintenance_window': is_maintenance,
-                'should_fetch': is_active_period and not is_maintenance
-            },
-            'schedule': {
-                'next_action': next_action,
-                'next_action_time': next_action_time.isoformat(),
-                'seconds_until_next': int((next_action_time - current_time).total_seconds())
-            },
-            'recommendations': {
-                'realtime_frequency': '2分钟间隔',
-                'historical_backfill': '每日01:00',
-                'maintenance_recovery': '每日19:31'
+        return jsonify(
+            {
+                "current_time": current_time.isoformat(),
+                "status": {
+                    "active_period": is_active_period,
+                    "maintenance_window": is_maintenance,
+                    "should_fetch": is_active_period and not is_maintenance,
+                },
+                "schedule": {
+                    "next_action": next_action,
+                    "next_action_time": next_action_time.isoformat(),
+                    "seconds_until_next": int(
+                        (next_action_time - current_time).total_seconds()
+                    ),
+                },
+                "recommendations": {
+                    "realtime_frequency": "2分钟间隔",
+                    "historical_backfill": "每日01:00",
+                    "maintenance_recovery": "每日19:31",
+                },
             }
-        })
+        )
 
     except Exception as e:
-        return jsonify({'status': 'error', 'error': str(e)}), 500
+        return jsonify({"status": "error", "error": str(e)}), 500
 
-@app.route('/stats')
+
+@app.route("/stats")
 def get_stats():
     """获取数据统计"""
     try:
@@ -733,26 +824,33 @@ def get_stats():
         result = bq_client.query(stats_query).result()
         stats = next(iter(result))
 
-        return jsonify({
-            'status': 'success',
-            'total_records': stats.total_records,
-            'data_sources': stats.sources,
-            'latest_data': stats.latest_data.isoformat() if stats.latest_data else None,
-            'earliest_data': stats.earliest_data.isoformat() if stats.earliest_data else None,
-            'today_count': stats.today_count,
-            'realtime_count': stats.realtime_count,
-            'historical_count': stats.historical_count,
-            'generated_at': datetime.now().isoformat()
-        })
+        return jsonify(
+            {
+                "status": "success",
+                "total_records": stats.total_records,
+                "data_sources": stats.sources,
+                "latest_data": (
+                    stats.latest_data.isoformat() if stats.latest_data else None
+                ),
+                "earliest_data": (
+                    stats.earliest_data.isoformat() if stats.earliest_data else None
+                ),
+                "today_count": stats.today_count,
+                "realtime_count": stats.realtime_count,
+                "historical_count": stats.historical_count,
+                "generated_at": datetime.now().isoformat(),
+            }
+        )
 
     except Exception as e:
-        return jsonify({'status': 'error', 'error': str(e)}), 500
+        return jsonify({"status": "error", "error": str(e)}), 500
 
-@app.route('/validate/accuracy')
+
+@app.route("/validate/accuracy")
 def validate_data_accuracy():
     """数据准确性验证 - 基于403期/天标准"""
     try:
-        days_to_check = int(request.args.get('days', 7))
+        days_to_check = int(request.args.get("days", 7))
         results = []
 
         for i in range(days_to_check):
@@ -794,7 +892,9 @@ def validate_data_accuracy():
                 sum_accuracy = (stats.sum_accurate_count / stats.actual_count) * 100
                 tail_accuracy = (stats.tail_accurate_count / stats.actual_count) * 100
                 size_accuracy = (stats.size_accurate_count / stats.actual_count) * 100
-                odd_even_accuracy = (stats.odd_even_accurate_count / stats.actual_count) * 100
+                odd_even_accuracy = (
+                    stats.odd_even_accurate_count / stats.actual_count
+                ) * 100
 
                 # 计算完整性
                 expected_draws = 403
@@ -806,74 +906,116 @@ def validate_data_accuracy():
                     time_span = stats.last_draw - stats.first_draw
                     time_span_hours = time_span.total_seconds() / 3600
 
-                results.append({
-                    "date": target_date.isoformat(),
-                    "completeness": {
-                        "expected_draws": expected_draws,
-                        "actual_draws": stats.actual_count,
-                        "completeness_pct": round(completeness, 1),
-                        "missing_draws": expected_draws - stats.actual_count
-                    },
-                    "accuracy": {
-                        "sum_calculation": round(sum_accuracy, 2),
-                        "tail_calculation": round(tail_accuracy, 2),
-                        "size_classification": round(size_accuracy, 2),
-                        "odd_even_classification": round(odd_even_accuracy, 2),
-                        "overall_accuracy": round((sum_accuracy + tail_accuracy + size_accuracy + odd_even_accuracy) / 4, 2)
-                    },
-                    "quality": {
-                        "api_success_rate": round(stats.api_success_rate or 0, 1),
-                        "data_sources": stats.source_count,
-                        "time_span_hours": round(time_span_hours, 1),
-                        "first_draw": stats.first_draw.isoformat() if stats.first_draw else None,
-                        "last_draw": stats.last_draw.isoformat() if stats.last_draw else None
-                    },
-                    "status": "excellent" if completeness >= 98 and sum_accuracy >= 99.5
-                             else "good" if completeness >= 95 and sum_accuracy >= 99
-                             else "needs_attention"
-                })
+                results.append(
+                    {
+                        "date": target_date.isoformat(),
+                        "completeness": {
+                            "expected_draws": expected_draws,
+                            "actual_draws": stats.actual_count,
+                            "completeness_pct": round(completeness, 1),
+                            "missing_draws": expected_draws - stats.actual_count,
+                        },
+                        "accuracy": {
+                            "sum_calculation": round(sum_accuracy, 2),
+                            "tail_calculation": round(tail_accuracy, 2),
+                            "size_classification": round(size_accuracy, 2),
+                            "odd_even_classification": round(odd_even_accuracy, 2),
+                            "overall_accuracy": round(
+                                (
+                                    sum_accuracy
+                                    + tail_accuracy
+                                    + size_accuracy
+                                    + odd_even_accuracy
+                                )
+                                / 4,
+                                2,
+                            ),
+                        },
+                        "quality": {
+                            "api_success_rate": round(stats.api_success_rate or 0, 1),
+                            "data_sources": stats.source_count,
+                            "time_span_hours": round(time_span_hours, 1),
+                            "first_draw": (
+                                stats.first_draw.isoformat()
+                                if stats.first_draw
+                                else None
+                            ),
+                            "last_draw": (
+                                stats.last_draw.isoformat() if stats.last_draw else None
+                            ),
+                        },
+                        "status": (
+                            "excellent"
+                            if completeness >= 98 and sum_accuracy >= 99.5
+                            else (
+                                "good"
+                                if completeness >= 95 and sum_accuracy >= 99
+                                else "needs_attention"
+                            )
+                        ),
+                    }
+                )
             else:
-                results.append({
-                    "date": target_date.isoformat(),
-                    "completeness": {"expected_draws": 403, "actual_draws": 0, "completeness_pct": 0.0},
-                    "accuracy": {"overall_accuracy": 0.0},
-                    "quality": {"api_success_rate": 0.0},
-                    "status": "no_data"
-                })
+                results.append(
+                    {
+                        "date": target_date.isoformat(),
+                        "completeness": {
+                            "expected_draws": 403,
+                            "actual_draws": 0,
+                            "completeness_pct": 0.0,
+                        },
+                        "accuracy": {"overall_accuracy": 0.0},
+                        "quality": {"api_success_rate": 0.0},
+                        "status": "no_data",
+                    }
+                )
 
         # 计算整体统计
         valid_days = [r for r in results if r["status"] != "no_data"]
         if valid_days:
-            avg_completeness = sum(r["completeness"]["completeness_pct"] for r in valid_days) / len(valid_days)
-            avg_accuracy = sum(r["accuracy"]["overall_accuracy"] for r in valid_days) / len(valid_days)
+            avg_completeness = sum(
+                r["completeness"]["completeness_pct"] for r in valid_days
+            ) / len(valid_days)
+            avg_accuracy = sum(
+                r["accuracy"]["overall_accuracy"] for r in valid_days
+            ) / len(valid_days)
 
-            return jsonify({
-                "status": "success",
-                "period": f"{days_to_check} days",
-                "summary": {
-                    "daily_expected_draws": 403,
-                    "avg_completeness_pct": round(avg_completeness, 1),
-                    "avg_accuracy_pct": round(avg_accuracy, 2),
-                    "days_excellent": len([r for r in valid_days if r["status"] == "excellent"]),
-                    "days_good": len([r for r in valid_days if r["status"] == "good"]),
-                    "days_needs_attention": len([r for r in valid_days if r["status"] == "needs_attention"])
-                },
-                "daily_results": results,
-                "recommendations": {
-                    "target_completeness": "≥98% (≥396期/天)",
-                    "target_accuracy": "≥99.5%",
-                    "monitoring_frequency": "每日检查",
-                    "alert_threshold": "<95% completeness or <99% accuracy"
+            return jsonify(
+                {
+                    "status": "success",
+                    "period": f"{days_to_check} days",
+                    "summary": {
+                        "daily_expected_draws": 403,
+                        "avg_completeness_pct": round(avg_completeness, 1),
+                        "avg_accuracy_pct": round(avg_accuracy, 2),
+                        "days_excellent": len(
+                            [r for r in valid_days if r["status"] == "excellent"]
+                        ),
+                        "days_good": len(
+                            [r for r in valid_days if r["status"] == "good"]
+                        ),
+                        "days_needs_attention": len(
+                            [r for r in valid_days if r["status"] == "needs_attention"]
+                        ),
+                    },
+                    "daily_results": results,
+                    "recommendations": {
+                        "target_completeness": "≥98% (≥396期/天)",
+                        "target_accuracy": "≥99.5%",
+                        "monitoring_frequency": "每日检查",
+                        "alert_threshold": "<95% completeness or <99% accuracy",
+                    },
                 }
-            })
+            )
         else:
             return jsonify({"status": "no_data", "message": "指定期间无有效数据"})
 
     except Exception as e:
         logger.error(f"数据准确性验证失败: {e}")
-        return jsonify({'status': 'error', 'error': str(e)}), 500
+        return jsonify({"status": "error", "error": str(e)}), 500
 
-@app.route('/enhance/field-utilization')
+
+@app.route("/enhance/field-utilization")
 def enhance_field_utilization():
     """展示字段利用情况和增强建议"""
     try:
@@ -900,7 +1042,7 @@ def enhance_field_utilization():
             field_utilization = {
                 "basic_fields": {
                     "issue_timestamp_abc": "100%",  # 基础字段总是完整
-                    "sum_tail_size_odd_even": "100%"  # 计算字段总是完整
+                    "sum_tail_size_odd_even": "100%",  # 计算字段总是完整
                 },
                 "api_fields": {
                     "api_codeid": f"{(stats.has_api_codeid / stats.total_records * 100):.1f}%",
@@ -908,12 +1050,12 @@ def enhance_field_utilization():
                     "kjtime_raw": f"{(stats.has_kjtime_raw / stats.total_records * 100):.1f}%",
                     "next_issue": f"{(stats.has_next_issue / stats.total_records * 100):.1f}%",
                     "next_time": f"{(stats.has_next_time / stats.total_records * 100):.1f}%",
-                    "award_time": f"{(stats.has_award_time / stats.total_records * 100):.1f}%"
+                    "award_time": f"{(stats.has_award_time / stats.total_records * 100):.1f}%",
                 },
                 "audit_fields": {
                     "raw_api_response": f"{(stats.has_raw_response / stats.total_records * 100):.1f}%",
-                    "data_sources": f"{stats.source_types} types"
-                }
+                    "data_sources": f"{stats.source_types} types",
+                },
             }
 
             # 可以增强的字段建议
@@ -922,54 +1064,61 @@ def enhance_field_utilization():
                     "field": "number_pattern",
                     "description": "号码模式分析 (豹子、对子、顺子等)",
                     "benefit": "提供更深入的号码特征分析",
-                    "implementation": "基于a,b,c三个号码计算模式"
+                    "implementation": "基于a,b,c三个号码计算模式",
                 },
                 {
                     "field": "sum_range_category",
                     "description": "和值区间分类 (ultra_small: 0-4, small: 5-9, etc.)",
                     "benefit": "更精细的和值分析维度",
-                    "implementation": "基于sum字段扩展分类"
+                    "implementation": "基于sum字段扩展分类",
                 },
                 {
                     "field": "time_slot_analysis",
                     "description": "时段分析 (上午、下午、晚上开奖特征)",
                     "benefit": "时间维度的开奖规律分析",
-                    "implementation": "基于kjtime_raw提取时段信息"
+                    "implementation": "基于kjtime_raw提取时段信息",
                 },
                 {
                     "field": "consecutive_tracking",
                     "description": "连续期号跟踪和缺失检测",
                     "benefit": "自动化数据完整性监控",
-                    "implementation": "基于issue字段序列分析"
-                }
+                    "implementation": "基于issue字段序列分析",
+                },
             ]
 
-            return jsonify({
-                "status": "success",
-                "analysis_period": "最近3天",
-                "total_records_analyzed": stats.total_records,
-                "current_field_utilization": field_utilization,
-                "enhancement_opportunities": enhancement_suggestions,
-                "utilization_summary": {
-                    "basic_coverage": "100% (完整)",
-                    "api_coverage": f"{(stats.has_api_codeid / stats.total_records * 100):.1f}% (核心API字段)",
-                    "audit_coverage": f"{(stats.has_raw_response / stats.total_records * 100):.1f}% (完整审计)",
-                    "overall_rating": "excellent" if stats.has_raw_response / stats.total_records >= 0.95 else "good"
+            return jsonify(
+                {
+                    "status": "success",
+                    "analysis_period": "最近3天",
+                    "total_records_analyzed": stats.total_records,
+                    "current_field_utilization": field_utilization,
+                    "enhancement_opportunities": enhancement_suggestions,
+                    "utilization_summary": {
+                        "basic_coverage": "100% (完整)",
+                        "api_coverage": f"{(stats.has_api_codeid / stats.total_records * 100):.1f}% (核心API字段)",
+                        "audit_coverage": f"{(stats.has_raw_response / stats.total_records * 100):.1f}% (完整审计)",
+                        "overall_rating": (
+                            "excellent"
+                            if stats.has_raw_response / stats.total_records >= 0.95
+                            else "good"
+                        ),
+                    },
                 }
-            })
+            )
 
         else:
             return jsonify({"status": "no_data", "message": "最近3天无数据用于分析"})
 
     except Exception as e:
         logger.error(f"字段利用分析失败: {e}")
-        return jsonify({'status': 'error', 'error': str(e)}), 500
+        return jsonify({"status": "error", "error": str(e)}), 500
 
-@app.route('/dedup/monitor')
+
+@app.route("/dedup/monitor")
 def deduplication_monitor():
     """去重效果监控"""
     try:
-        days = int(request.args.get('days', 7))
+        days = int(request.args.get("days", 7))
 
         # 每日重复率分析
         duplicate_analysis_query = """
@@ -987,28 +1136,36 @@ def deduplication_monitor():
         """
 
         job_config = bigquery.QueryJobConfig(
-            query_parameters=[
-                bigquery.ScalarQueryParameter("days", "INTEGER", days)
-            ]
+            query_parameters=[bigquery.ScalarQueryParameter("days", "INTEGER", days)]
         )
 
-        result = bq_client.query(duplicate_analysis_query, job_config=job_config).result()
+        result = bq_client.query(
+            duplicate_analysis_query, job_config=job_config
+        ).result()
         daily_stats = []
         total_duplicates = 0
         total_records = 0
 
         for row in result:
-            daily_stats.append({
-                "date": row.date.isoformat(),
-                "total_records": row.total_records,
-                "unique_issues": row.unique_issues,
-                "duplicate_count": row.duplicate_count,
-                "duplicate_rate_pct": row.duplicate_rate_pct,
-                "source_count": row.source_count,
-                "data_quality": "excellent" if row.duplicate_rate_pct == 0
-                               else "good" if row.duplicate_rate_pct < 0.1
-                               else "needs_attention"
-            })
+            daily_stats.append(
+                {
+                    "date": row.date.isoformat(),
+                    "total_records": row.total_records,
+                    "unique_issues": row.unique_issues,
+                    "duplicate_count": row.duplicate_count,
+                    "duplicate_rate_pct": row.duplicate_rate_pct,
+                    "source_count": row.source_count,
+                    "data_quality": (
+                        "excellent"
+                        if row.duplicate_rate_pct == 0
+                        else (
+                            "good"
+                            if row.duplicate_rate_pct < 0.1
+                            else "needs_attention"
+                        )
+                    ),
+                }
+            )
             total_duplicates += row.duplicate_count
             total_records += row.total_records
 
@@ -1025,20 +1182,26 @@ def deduplication_monitor():
         ORDER BY uniqueness_pct ASC
         """
 
-        source_result = bq_client.query(source_analysis_query, job_config=job_config).result()
+        source_result = bq_client.query(
+            source_analysis_query, job_config=job_config
+        ).result()
         source_stats = []
 
         for row in source_result:
-            source_stats.append({
-                "source": row.source,
-                "total_records": row.total_records,
-                "unique_issues": row.unique_issues,
-                "uniqueness_pct": row.uniqueness_pct,
-                "potential_duplicates": row.total_records - row.unique_issues,
-                "quality_rating": "excellent" if row.uniqueness_pct >= 99.9
-                                 else "good" if row.uniqueness_pct >= 99
-                                 else "poor"
-            })
+            source_stats.append(
+                {
+                    "source": row.source,
+                    "total_records": row.total_records,
+                    "unique_issues": row.unique_issues,
+                    "uniqueness_pct": row.uniqueness_pct,
+                    "potential_duplicates": row.total_records - row.unique_issues,
+                    "quality_rating": (
+                        "excellent"
+                        if row.uniqueness_pct >= 99.9
+                        else "good" if row.uniqueness_pct >= 99 else "poor"
+                    ),
+                }
+            )
 
         # 时间间隔分析 (检测异常频繁的数据)
         time_gap_query = """
@@ -1065,43 +1228,56 @@ def deduplication_monitor():
         gap_result = bq_client.query(time_gap_query).result()
         gap_stats = next(iter(gap_result))
 
-        return jsonify({
-            "status": "success",
-            "analysis_period": f"{days} days",
-            "summary": {
-                "total_records": total_records,
-                "total_duplicates": total_duplicates,
-                "overall_duplicate_rate": round(total_duplicates / total_records * 100, 3) if total_records > 0 else 0,
-                "deduplication_effectiveness": "excellent" if total_duplicates == 0 else "good"
-            },
-            "daily_analysis": daily_stats,
-            "source_analysis": source_stats,
-            "timing_analysis": {
-                "avg_interval_seconds": gap_stats.avg_gap_seconds,
-                "expected_interval": 210,
-                "interval_variance": abs(gap_stats.avg_gap_seconds - 210) if gap_stats.avg_gap_seconds else 0,
-                "anomalous_intervals": {
-                    "too_frequent": gap_stats.too_frequent_count,
-                    "too_sparse": gap_stats.too_sparse_count
-                }
-            },
-            "recommendations": {
-                "target_duplicate_rate": "0%",
-                "monitoring_frequency": "每日检查",
-                "alert_threshold": ">0.1% duplicate rate",
-                "optimization_needed": total_duplicates > 0
+        return jsonify(
+            {
+                "status": "success",
+                "analysis_period": f"{days} days",
+                "summary": {
+                    "total_records": total_records,
+                    "total_duplicates": total_duplicates,
+                    "overall_duplicate_rate": (
+                        round(total_duplicates / total_records * 100, 3)
+                        if total_records > 0
+                        else 0
+                    ),
+                    "deduplication_effectiveness": (
+                        "excellent" if total_duplicates == 0 else "good"
+                    ),
+                },
+                "daily_analysis": daily_stats,
+                "source_analysis": source_stats,
+                "timing_analysis": {
+                    "avg_interval_seconds": gap_stats.avg_gap_seconds,
+                    "expected_interval": 210,
+                    "interval_variance": (
+                        abs(gap_stats.avg_gap_seconds - 210)
+                        if gap_stats.avg_gap_seconds
+                        else 0
+                    ),
+                    "anomalous_intervals": {
+                        "too_frequent": gap_stats.too_frequent_count,
+                        "too_sparse": gap_stats.too_sparse_count,
+                    },
+                },
+                "recommendations": {
+                    "target_duplicate_rate": "0%",
+                    "monitoring_frequency": "每日检查",
+                    "alert_threshold": ">0.1% duplicate rate",
+                    "optimization_needed": total_duplicates > 0,
+                },
             }
-        })
+        )
 
     except Exception as e:
         logger.error(f"去重监控失败: {e}")
-        return jsonify({'status': 'error', 'error': str(e)}), 500
+        return jsonify({"status": "error", "error": str(e)}), 500
 
-@app.route('/dedup/cleanup')
+
+@app.route("/dedup/cleanup")
 def cleanup_duplicates():
     """重复数据清理"""
     try:
-        dry_run = request.args.get('dry_run', 'true').lower() == 'true'
+        dry_run = request.args.get("dry_run", "true").lower() == "true"
 
         # 查找重复记录
         duplicate_query = """
@@ -1132,39 +1308,47 @@ def cleanup_duplicates():
         duplicates = list(result)
 
         if not duplicates:
-            return jsonify({
-                "status": "no_duplicates",
-                "message": "未发现重复记录",
-                "cleanup_needed": False
-            })
+            return jsonify(
+                {
+                    "status": "no_duplicates",
+                    "message": "未发现重复记录",
+                    "cleanup_needed": False,
+                }
+            )
 
         cleanup_plan = []
         total_to_delete = 0
 
         for dup in duplicates:
             total_to_delete += dup.delete_count
-            cleanup_plan.append({
-                "issue": dup.issue,
-                "duplicate_count": dup.dup_count,
-                "keep_version": {
-                    "timestamp": dup.keep_timestamp.isoformat(),
-                    "source": dup.keep_source
-                },
-                "will_delete": dup.delete_count
-            })
+            cleanup_plan.append(
+                {
+                    "issue": dup.issue,
+                    "duplicate_count": dup.dup_count,
+                    "keep_version": {
+                        "timestamp": dup.keep_timestamp.isoformat(),
+                        "source": dup.keep_source,
+                    },
+                    "will_delete": dup.delete_count,
+                }
+            )
 
         if dry_run:
-            return jsonify({
-                "status": "dry_run_complete",
-                "cleanup_plan": cleanup_plan,
-                "summary": {
-                    "duplicated_issues": len(duplicates),
-                    "total_records_to_delete": total_to_delete,
-                    "largest_duplicate_count": max(dup["duplicate_count"] for dup in cleanup_plan)
-                },
-                "next_step": "设置 dry_run=false 执行实际清理",
-                "warning": "执行清理前请确认计划无误"
-            })
+            return jsonify(
+                {
+                    "status": "dry_run_complete",
+                    "cleanup_plan": cleanup_plan,
+                    "summary": {
+                        "duplicated_issues": len(duplicates),
+                        "total_records_to_delete": total_to_delete,
+                        "largest_duplicate_count": max(
+                            dup["duplicate_count"] for dup in cleanup_plan
+                        ),
+                    },
+                    "next_step": "设置 dry_run=false 执行实际清理",
+                    "warning": "执行清理前请确认计划无误",
+                }
+            )
 
         # 执行实际清理
         deleted_count = 0
@@ -1180,52 +1364,70 @@ def cleanup_duplicates():
 
                 delete_config = bigquery.QueryJobConfig(
                     query_parameters=[
-                        bigquery.ScalarQueryParameter("issue", "STRING", dup_info["issue"]),
-                        bigquery.ScalarQueryParameter("keep_timestamp", "TIMESTAMP", dup_info["keep_version"]["timestamp"])
+                        bigquery.ScalarQueryParameter(
+                            "issue", "STRING", dup_info["issue"]
+                        ),
+                        bigquery.ScalarQueryParameter(
+                            "keep_timestamp",
+                            "TIMESTAMP",
+                            dup_info["keep_version"]["timestamp"],
+                        ),
                     ]
                 )
 
                 bq_client.query(delete_query, delete_config).result()
                 deleted_count += dup_info["will_delete"]
 
-                cleanup_results.append({
-                    "issue": dup_info["issue"],
-                    "deleted_count": dup_info["will_delete"],
-                    "status": "success"
-                })
+                cleanup_results.append(
+                    {
+                        "issue": dup_info["issue"],
+                        "deleted_count": dup_info["will_delete"],
+                        "status": "success",
+                    }
+                )
 
             except Exception as e:
                 logger.error(f"清理期号 {dup_info['issue']} 失败: {e}")
-                cleanup_results.append({
-                    "issue": dup_info["issue"],
-                    "deleted_count": 0,
-                    "status": "failed",
-                    "error": str(e)
-                })
+                cleanup_results.append(
+                    {
+                        "issue": dup_info["issue"],
+                        "deleted_count": 0,
+                        "status": "failed",
+                        "error": str(e),
+                    }
+                )
 
-        return jsonify({
-            "status": "cleanup_completed",
-            "summary": {
-                "total_deleted": deleted_count,
-                "issues_processed": len(cleanup_results),
-                "success_count": len([r for r in cleanup_results if r["status"] == "success"]),
-                "failure_count": len([r for r in cleanup_results if r["status"] == "failed"])
-            },
-            "cleanup_details": cleanup_results,
-            "message": f"成功清理 {deleted_count} 条重复记录"
-        })
+        return jsonify(
+            {
+                "status": "cleanup_completed",
+                "summary": {
+                    "total_deleted": deleted_count,
+                    "issues_processed": len(cleanup_results),
+                    "success_count": len(
+                        [r for r in cleanup_results if r["status"] == "success"]
+                    ),
+                    "failure_count": len(
+                        [r for r in cleanup_results if r["status"] == "failed"]
+                    ),
+                },
+                "cleanup_details": cleanup_results,
+                "message": f"成功清理 {deleted_count} 条重复记录",
+            }
+        )
 
     except Exception as e:
         logger.error(f"重复数据清理失败: {e}")
-        return jsonify({'status': 'error', 'error': str(e)}), 500
+        return jsonify({"status": "error", "error": str(e)}), 500
+
 
 # 兼容性路由 - 保持与旧版本的兼容
-@app.route('/fetch/draws')
+@app.route("/fetch/draws")
 async def fetch_draws_legacy():
     """兼容旧版本的端点"""
     return await fetch_realtime()
 
+
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 8080))
+    port = int(os.environ.get("PORT", 8080))
     logger.info(f"启动 PC28 优化服务，端口: {port}")
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=False)

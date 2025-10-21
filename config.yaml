@@ -35,5 +35,3 @@ monitoring:
   alert_thresholds:
     api_timeout: 10   # 秒
     data_lag: 300     # 秒
-
-
